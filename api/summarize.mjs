@@ -152,6 +152,9 @@ export async function handleSummarize(req) {
   }
 
   const providers = buildProviders();
+  if (!providers.length) {
+    return json(503, { error: 'No AI provider key is configured. Add GEMINI_API_KEY to this Vercel project for the Production environment, then redeploy.' });
+  }
 
   let data;
   try { data = JSON.parse((await req.text()) || '{}'); } catch { return json(400, { error: 'Bad request.' }); }
@@ -179,6 +182,7 @@ export async function handleSummarize(req) {
   // Try each provider in turn. If one is rate limited (429) or failing, fall back to the next,
   // so a busy free-tier key doesn't stop summaries from working.
   let sawRateLimit = false;
+  let lastFailure = null;
   for (const p of providers) {
     try {
       const text = await p.run(system, userMsg);
@@ -186,13 +190,21 @@ export async function handleSummarize(req) {
       console.error(p.name, 'returned an empty summary');
     } catch (e) {
       if (e.status === 429) sawRateLimit = true;
+      lastFailure = { provider: p.name, status: e.status || 0 };
       console.error(p.name, 'failed', e.status || '', String(e.message || e).slice(0, 300));
     }
   }
+  let error = 'The summary service returned an error.';
+  if (sawRateLimit) error = 'Too many summaries right now. Please try again in a minute.';
+  else if (lastFailure?.provider === 'Gemini' && [401, 403].includes(lastFailure.status)) {
+    error = 'Gemini rejected the API key. Check GEMINI_API_KEY in Vercel, enable it for Production, and confirm its restrictions allow the Gemini API.';
+  } else if (lastFailure?.provider === 'Gemini' && lastFailure.status === 404) {
+    error = 'Gemini could not find the configured model. Check GEMINI_MODEL in Vercel; the default is gemini-3.8-flash.';
+  } else if (lastFailure?.provider === 'Gemini' && lastFailure.status === 400) {
+    error = 'Gemini rejected the request. Check the Vercel function logs for details.';
+  }
   return json(sawRateLimit ? 429 : 502, {
-    error: sawRateLimit
-      ? 'Too many summaries right now. Please try again in a minute.'
-      : 'The summary service returned an error.'
+    error
   });
 }
 
