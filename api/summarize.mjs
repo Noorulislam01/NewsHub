@@ -69,7 +69,12 @@ async function fetchArticle(url) {
 }
 
 class ProviderError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, code = '', reason = '') {
+    super(message);
+    this.status = status;
+    this.code = code;
+    this.reason = reason;
+  }
 }
 
 async function postJson(url, headers, body) {
@@ -99,11 +104,21 @@ function geminiProvider(name, base, headers) {
         {
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-          generationConfig: { maxOutputTokens: 1200, temperature: 0.3 }
+          generationConfig: {
+            maxOutputTokens: 1200,
+            temperature: 0.3,
+            thinkingConfig: { thinkingLevel: 'LOW' }
+          }
         }
       );
-      const parts = out?.candidates?.[0]?.content?.parts || [];
-      return parts.filter(p => p.text && !p.thought).map(p => p.text).join('\n').trim();
+      const candidate = out?.candidates?.[0];
+      const parts = candidate?.content?.parts || [];
+      const text = parts.filter(p => p.text && !p.thought).map(p => p.text).join('\n').trim();
+      if (!text) {
+        const reason = candidate?.finishReason || out?.promptFeedback?.blockReason || 'no text returned';
+        throw new ProviderError(502, `Gemini returned no text (${reason})`, 'EMPTY_RESPONSE', reason);
+      }
+      return text;
     }
   };
 }
@@ -187,15 +202,19 @@ export async function handleSummarize(req) {
     try {
       const text = await p.run(system, userMsg);
       if (text) return json(200, { summary: text, basis: haveFull ? 'full' : 'snippet' });
+      lastFailure = { provider: p.name, status: 0, code: 'EMPTY_RESPONSE', reason: 'no text returned' };
       console.error(p.name, 'returned an empty summary');
     } catch (e) {
       if (e.status === 429) sawRateLimit = true;
-      lastFailure = { provider: p.name, status: e.status || 0 };
+      lastFailure = { provider: p.name, status: e.status || 0, code: e.code || '', reason: e.reason || '' };
       console.error(p.name, 'failed', e.status || '', String(e.message || e).slice(0, 300));
     }
   }
   let error = 'The summary service returned an error.';
   if (sawRateLimit) error = 'Too many summaries right now. Please try again in a minute.';
+  else if (lastFailure?.code === 'EMPTY_RESPONSE') {
+    error = `${lastFailure.provider} returned no summary text (${lastFailure.reason}). Try again or choose a different article.`;
+  }
   else if (lastFailure?.provider === 'Gemini' && [401, 403].includes(lastFailure.status)) {
     error = 'Gemini rejected the API key. Check GEMINI_API_KEY in Vercel, enable it for Production, and confirm its restrictions allow the Gemini API.';
   } else if (lastFailure?.provider === 'Gemini' && lastFailure.status === 404) {
