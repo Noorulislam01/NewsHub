@@ -1,7 +1,6 @@
-// Netlify Function (v2): fetches a news article and returns a short AI summary.
-// Uses GEMINI_API_KEY if set, and falls back to Netlify AI Gateway (no key needed) when it is rate limited.
-// Optional: GEMINI_MODEL (default below), ALLOWED_ORIGIN (e.g. https://your-site.netlify.app)
-// to stop other sites using your key.
+// Shared Vercel/Netlify handler: fetches a news article and returns a short AI summary.
+// Uses GEMINI_API_KEY first, then configured AI Gateway or Anthropic credentials as fallbacks.
+// Optional: GEMINI_MODEL (default below), ALLOWED_ORIGIN (the deployed site origin).
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 const CLAUDE_MODEL = 'claude-haiku-5-5';
@@ -143,6 +142,7 @@ function buildProviders() {
 }
 
 export async function handleSummarize(req) {
+  if (req.method === 'GET') return json(200, { ok: true, service: 'summary' });
   if (req.method !== 'POST') return json(405, { error: 'Use POST.' });
 
   const allowed = process.env.ALLOWED_ORIGIN;

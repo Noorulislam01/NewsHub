@@ -548,7 +548,7 @@ async function toggleSummary(a){
   try{
     const r=await fetch(SUMMARY_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:a.link,title:a.title,snippet:a.summary||''})});
     let d={};try{d=await r.json()}catch(e){}
-    if(!r.ok||!d.summary)throw new Error(r.status===404?'Summaries only work on the deployed site, not when opened as a local file.':(d.error||'Could not summarize this article.'));
+    if(!r.ok||!d.summary)throw new Error(r.status===404?'The summary API returned 404. Check that this Vercel deployment includes the latest commit and the /api/summarize function.':(d.error||'Could not summarize this article.'));
     st.status='done';st.text=d.summary;st.basis=d.basis;
     LS.set('inh_sum_'+key,{text:d.summary,basis:d.basis});
   }catch(e){
