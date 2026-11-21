@@ -452,19 +452,20 @@ async function loadSource(src,force){
   const range=prefs.range,key='inh_c_'+src.id,c=LS.get(key,null),now=Date.now();
   if(!force&&c&&c.searchRange===range&&now-c.t<CACHE_TTL)return{items:c.items,cached:true};
   const errors=[],fresh=[];
-  // Keep the publisher's RSS headlines and supplement them with Google News search
-  // results for the selected time range. Each source is allowed to fail independently.
+  // Publisher RSS is enough for Latest News. Only query Google News when the user
+  // explicitly asks for a wider history, to avoid extra relay traffic on normal loads.
   const host=src.searchHost||new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,'');
   const days=range==='latest'?2:Math.max(1,Math.ceil(Number(range)/24));
   const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:'+days+'d')+'&hl=en-IN&gl=IN&ceid=IN:en';
-  const jobs=[...src.feeds.slice(0,MAX_FEEDS_TRIED).map(feed=>fetchFirst(feed)),fetchFirst(gn)];
+  const includeSearch=range!=='latest';
+  const jobs=[...src.feeds.slice(0,MAX_FEEDS_TRIED).map(feed=>fetchFirst(feed)),...(includeSearch?[fetchFirst(gn)]:[])];
   const results=await Promise.allSettled(jobs);
   results.forEach((result,i)=>{
     if(result.status!=='fulfilled'){
-      errors.push((i===jobs.length-1?'Google News':'Publisher RSS')+': '+(result.reason?.message||'request failed'));
+      errors.push((includeSearch&&i===jobs.length-1?'Google News':'Publisher RSS')+': '+(result.reason?.message||'request failed'));
       return;
     }
-    const fromSearch=i===jobs.length-1;
+    const fromSearch=includeSearch&&i===jobs.length-1;
     result.value.forEach(a=>fresh.push(fromSearch?{...a,title:a.title.replace(/\s+-\s+[^-]+$/,''),summary:'',img:''}:a));
   });
 
