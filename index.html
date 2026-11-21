@@ -513,8 +513,8 @@ function view(){
   list.sort((x,y)=>(y.date||0)-(x.date||0));
   render(group(list));
 }
-/* ---------- AI summaries (via Netlify function) ---------- */
-const SUMMARY_ENDPOINT='/.netlify/functions/summarize';
+/* ---------- AI summaries (via serverless function) ---------- */
+const SUMMARY_ENDPOINT='/api/summarize';
 const sumState={};   // key -> {open,status,text,basis,err}
 function getSum(key){
   if(!sumState[key]){
