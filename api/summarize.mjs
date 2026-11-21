@@ -3,6 +3,7 @@
 // Optional: GEMINI_MODEL (default below), ALLOWED_ORIGIN (the deployed site origin).
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 const CLAUDE_MODEL = 'claude-haiku-5-5';
 const MAX_ARTICLE_CHARS = 9000; // shorter input = fewer tokens per minute used
 
@@ -98,27 +99,36 @@ function geminiProvider(name, base, headers) {
   return {
     name,
     async run(system, userMsg) {
-      const out = await postJson(
-        `${base}/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
-        headers,
-        {
-          systemInstruction: { parts: [{ text: system }] },
-          contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-          generationConfig: {
-            maxOutputTokens: 1200,
-            temperature: 0.3,
-            thinkingConfig: { thinkingLevel: 'LOW' }
-          }
+      const models = [...new Set([GEMINI_MODEL, GEMINI_FALLBACK_MODEL].filter(Boolean))];
+      for (let i = 0; i < models.length; i++) {
+        const model = models[i];
+        try {
+          const out = await postJson(
+            `${base}/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+            headers,
+            {
+              systemInstruction: { parts: [{ text: system }] },
+              contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+              generationConfig: {
+                maxOutputTokens: 1200,
+                temperature: 0.3,
+                thinkingConfig: { thinkingLevel: 'LOW' }
+              }
+            }
+          );
+          const candidate = out?.candidates?.[0];
+          const parts = candidate?.content?.parts || [];
+          const text = parts.filter(p => p.text && !p.thought).map(p => p.text).join('\n').trim();
+          if (text) return text;
+          const reason = candidate?.finishReason || out?.promptFeedback?.blockReason || 'no text returned';
+          throw new ProviderError(502, `Gemini returned no text (${reason})`, 'EMPTY_RESPONSE', reason);
+        } catch (e) {
+          const canFallback = i < models.length - 1 && (e.status === 429 || e.status === 503 || e.code === 'EMPTY_RESPONSE');
+          if (!canFallback) throw e;
+          console.warn(`Gemini model ${model} failed (${e.status || e.code}); trying ${models[i + 1]}`);
         }
-      );
-      const candidate = out?.candidates?.[0];
-      const parts = candidate?.content?.parts || [];
-      const text = parts.filter(p => p.text && !p.thought).map(p => p.text).join('\n').trim();
-      if (!text) {
-        const reason = candidate?.finishReason || out?.promptFeedback?.blockReason || 'no text returned';
-        throw new ProviderError(502, `Gemini returned no text (${reason})`, 'EMPTY_RESPONSE', reason);
       }
-      return text;
+      return '';
     }
   };
 }
