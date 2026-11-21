@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#c2410c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>DILSHAD NEWS HUB</title>
+<style>
+:root{--bg:#f6f5f2;--surface:#fff;--ink:#1b1f2a;--mute:#5d6577;--line:#e2e0da;--accent:#c2410c;--accent-ink:#fff;--chip:#eceae4;--ok:#15803d;--err:#b91c1c}
+:root[data-theme=dark]{--bg:#12151c;--surface:#1b2029;--ink:#eceef3;--mute:#9aa3b5;--line:#2a313d;--accent:#fb923c;--accent-ink:#1a1206;--chip:#262d39;--ok:#4ade80;--err:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif}
+button,input,select{font:inherit;color:inherit}
+.ui{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{max-width:1200px;margin:auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:nowrap}
+.filter-row{max-width:1200px;margin:auto;padding:0 16px 10px;display:flex;align-items:center}
+.theme-icon{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:1.55rem;line-height:1;border-radius:50%;margin-left:auto}
+
+.brand{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-right:auto}
+.brand span{color:var(--accent)}
+.tools{max-width:1200px;margin:auto;padding:0 16px 12px;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.tools input[type=search],.tools select,.ddbtn{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);text-align:left;cursor:pointer}
+.btn{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:focus-visible,.ddbtn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dd{position:relative}
+.panel{position:absolute;top:calc(100% + 4px);left:0;right:0;min-width:240px;max-height:340px;display:none;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.18);z-index:30}
+.dd.open .panel{display:flex}
+.panel input{margin:8px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.panel .acts{display:flex;gap:6px;padding:0 8px 8px}.panel .acts button{flex:1;padding:6px;font-size:.85rem}
+.panel .list{overflow:auto;padding:0 4px 6px}
+.panel label{display:flex;gap:8px;align-items:center;padding:7px 8px;cursor:pointer;border-radius:6px}
+.panel label:hover{background:var(--chip)}
+main{max-width:1200px;margin:auto;padding:16px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:.9rem;margin-bottom:12px}
+.stats b{color:var(--ink)}
+.notes{display:grid;gap:6px;margin-bottom:12px}
+.note{padding:8px 12px;border-radius:8px;font-size:.88rem;background:var(--chip);border-left:4px solid var(--err)}
+.note.info{border-color:var(--mute)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.card[data-link]{cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;transition:transform .12s ease}
+.card[data-link]:active{transform:scale(.985)}
+.card .save-article,.card a{-webkit-tap-highlight-color:transparent}
+.sum-btn{flex:0 0 auto;padding:8px 12px;border:1px solid var(--accent);border-radius:9px;background:transparent;color:var(--accent);font:600 .86rem system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sum-btn:hover{background:var(--chip)}
+.sum-btn:disabled{opacity:.7;cursor:progress}
+.sum-box{margin-top:4px;padding:12px;border-radius:10px;background:var(--chip);font-size:.9rem;line-height:1.55;cursor:default}
+.sum-loading,.sum-note{color:var(--mute);font-size:.82rem}
+.sum-note{margin-top:8px}
+.sum-err{color:var(--err)}
+.sum-box[hidden]{display:none}
+.card img{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--chip)}
+.card .body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.78rem;color:var(--mute)}
+.pub{font-weight:700;color:var(--accent)}
+.card h2{font-size:1.1rem;line-height:1.3;margin:0}
+.card p{margin:0;color:var(--mute);font-size:.92rem}
+.also{font-size:.8rem;border-top:1px dashed var(--line);padding-top:8px}
+.also a{color:var(--accent);margin-right:8px}
+.read{margin-top:auto;font-weight:700;color:var(--accent);text-decoration:none}
+.read:hover{text-decoration:underline}
+.empty{text-align:center;padding:60px 16px;color:var(--mute)}
+.skel{height:300px;border-radius:12px;background:linear-gradient(90deg,var(--chip) 25%,var(--line) 50%,var(--chip) 75%);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.tools.hide{display:none}
+main.filters-mode{display:none}
+@media(max-width:700px){header{position:sticky;top:0}.brand{font-size:1.35rem}.theme-icon{flex:0 0 44px}.filter-row{padding-top:0}}
+footer{max-width:1200px;margin:auto;padding:16px;color:var(--mute);font-size:.8rem}
+
+
+
+/* Keep the masthead title visually centered between the menu and theme controls */
+.bar{position:relative;justify-content:space-between;min-height:64px}
+.brand{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  margin:0;text-align:center;white-space:nowrap;max-width:calc(100% - 120px);
+  overflow:hidden;text-overflow:ellipsis;pointer-events:none;
+}
+.theme-icon{margin-left:0;flex:0 0 44px}
+@media(max-width:700px){
+  .bar{min-height:62px}
+  .brand{font-size:clamp(.92rem,4.2vw,1.22rem);letter-spacing:-.035em;max-width:calc(100% - 108px)}
+}
+
+
+/* Saved article controls */
+.card-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
+.card-actions .read{margin-top:0}
+.save-article{
+  flex:0 0 auto;padding:8px 12px;border:1px solid var(--line);border-radius:9px;
+  background:var(--chip);color:var(--ink);font:600 .86rem system-ui,-apple-system,"Segoe UI",sans-serif;
+  cursor:pointer;transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.save-article:hover{border-color:var(--accent);transform:translateY(-1px)}
+.save-article.is-saved{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.saved-count{margin-left:auto;min-width:23px;padding:2px 7px;border-radius:20px;background:var(--chip);color:var(--accent);font-size:.78rem;text-align:center}
+
+/* Compact hamburger navigation */
+.bar{position:relative}
+.menu-wrap{position:relative;flex:0 0 auto}
+.menu-toggle{
+  width:44px;height:44px;padding:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;border-radius:12px;
+  border:1px solid var(--line);background:var(--surface);
+  box-shadow:0 2px 8px rgba(20,25,35,.06);
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.menu-toggle:hover{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}
+.menu-toggle span{display:block;width:19px;height:2px;border-radius:4px;background:var(--ink);transition:transform .2s ease,opacity .2s ease}
+.menu-toggle[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)}
+.menu-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
+.menu-toggle[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)}
+.menu-panel{
+  position:absolute;top:calc(100% + 10px);left:0;width:220px;padding:8px;
+  display:flex;flex-direction:column;gap:4px;background:var(--surface);
+  border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 16px 38px rgba(0,0,0,.18);z-index:60;
+  animation:menuIn .16s ease-out;
+}
+.menu-panel[hidden],.menu-panel button[hidden]{display:none}
+.menu-panel button{
+  width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;
+  border:0;border-radius:9px;background:transparent;color:var(--ink);
+  text-align:left;font:600 .94rem system-ui,-apple-system,"Segoe UI",sans-serif;
+  cursor:pointer;transition:background .15s ease,color .15s ease;
+}
+.menu-panel button:hover,.menu-panel button:focus-visible{background:var(--chip);color:var(--accent);outline:none}
+.menu-symbol{width:22px;text-align:center;font-size:1.15rem;color:var(--accent)}
+@keyframes menuIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:700px){
+  .bar{gap:9px}
+  .menu-panel{width:min(220px,calc(100vw - 32px))}
+  .brand{font-size:1.22rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .menu-toggle,.menu-toggle span,.menu-panel button{transition:none}
+  .menu-panel{animation:none}
+}
+
+/* Modern filter controls */
+.filter-row{padding-top:2px;padding-bottom:12px}
+#filtBtn{
+  display:inline-flex;align-items:center;gap:10px;min-height:44px;
+  padding:10px 18px;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));
+  border-radius:12px;background:linear-gradient(135deg,var(--surface),var(--chip));
+  color:var(--ink);font-weight:700;letter-spacing:.01em;
+  box-shadow:0 3px 10px rgba(20,25,35,.07);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+#filtBtn::before{
+  content:"";width:17px;height:17px;display:inline-block;flex:0 0 17px;
+  background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16l-6.5 7.5v5l-3 1.5v-6.5L4 5z'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16l-6.5 7.5v5l-3 1.5v-6.5L4 5z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+#filtBtn:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 6px 16px rgba(20,25,35,.12)}
+#filtBtn:active{transform:translateY(0)}
+.ddbtn{
+  min-height:44px;padding:10px 38px 10px 13px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font-weight:600;box-shadow:0 2px 7px rgba(20,25,35,.045);
+  transition:border-color .18s ease,box-shadow .18s ease;
+  position:relative;
+}
+.ddbtn::after{
+  content:"";position:absolute;right:14px;top:50%;width:8px;height:8px;
+  border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);
+  transform:translateY(-70%) rotate(45deg);transition:transform .18s ease;
+}
+.dd.open>.ddbtn{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+.dd.open>.ddbtn::after{transform:translateY(-25%) rotate(225deg)}
+.panel{
+  top:calc(100% + 8px);padding:8px;gap:4px;max-height:380px;
+  border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 16px 40px rgba(0,0,0,.18);
+  backdrop-filter:blur(12px);
+}
+.panel input{
+  margin:2px 2px 6px;padding:10px 12px;border-radius:9px;
+  border:1px solid var(--line);outline:none;
+}
+.panel input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+.panel .acts{gap:7px;padding:0 2px 7px}
+.panel .acts button{border-radius:8px;background:var(--chip);border:1px solid var(--line);font-weight:600}
+.panel .acts button:hover{border-color:var(--accent);color:var(--accent)}
+
+.panel .acts button[data-a="close"]{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:36px;padding:7px 14px;border:1px solid var(--accent);
+  border-radius:9px;background:var(--accent);color:var(--accent-ink);
+  font-weight:700;box-shadow:0 2px 7px color-mix(in srgb,var(--accent) 24%,transparent);
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
+}
+.panel .acts button[data-a="close"]::before{
+  content:"✓";display:inline-grid;place-items:center;width:16px;height:16px;
+  border:1.5px solid currentColor;border-radius:50%;font-size:10px;line-height:1;
+}
+.panel .acts button[data-a="close"]:hover{
+  color:var(--accent-ink);border-color:var(--accent);filter:brightness(1.06);
+  box-shadow:0 4px 11px color-mix(in srgb,var(--accent) 30%,transparent);
+  transform:translateY(-1px);
+}
+.panel .acts button[data-a="close"]:active{transform:translateY(0);filter:brightness(.96)}
+.panel .acts button[data-a="close"]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.panel .list{padding:2px}
+.panel label{padding:9px 10px;gap:10px;font-size:.92rem;transition:background .15s ease}
+.panel label:hover{background:var(--chip)}
+.panel label input[type=checkbox]{
+  width:17px;height:17px;margin:0;accent-color:var(--accent);flex:0 0 17px;
+}
+@media(max-width:700px){
+  #filtBtn{width:100%;justify-content:center}
+  .panel{left:0;right:0;min-width:0}
+}
+@media(prefers-reduced-motion:reduce){
+  #filtBtn,.ddbtn,.ddbtn::after,.panel label{transition:none}
+}
+
+</style>
+</head>
+<body>
+<header class="ui">
+  <div class="bar">
+    <div class="menu-wrap">
+      <button class="btn menu-toggle" id="menuBtn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainMenu" title="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="menu-panel" id="mainMenu" aria-label="Main menu" hidden>
+        <button type="button" data-menu-action="home"><span class="menu-symbol">⌂</span>Home</button>
+        <button type="button" data-menu-action="saved"><span class="menu-symbol">★</span>Saved Articles <span class="saved-count" id="savedCount">0</span></button>
+        <button type="button" data-menu-action="filters"><span class="menu-symbol">☷</span>Filters</button>
+        <button type="button" data-menu-action="refresh"><span class="menu-symbol">↻</span>Refresh news</button>
+        <button type="button" data-menu-action="install" id="installBtn" hidden><span class="menu-symbol">⬇</span>Install app</button>
+      </nav>
+    </div>
+    <div class="brand">DILSHAD <span>NEWS</span> HUB</div>
+    <button class="btn theme-icon" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch theme">☾</button>
+  </div>
+  <div class="tools hide" id="tools">
+    <input type="search" id="q" placeholder="Search news" aria-label="Search news">
+    <div class="dd" id="ddPapers"></div>
+    <div class="dd" id="ddCats"></div>
+    <select id="range" aria-label="Date range">
+      <option value="latest">Latest News</option><option value="24">Last 24 Hours</option>
+      <option value="48">Last 48 Hours</option><option value="168">Last 7 Days</option>
+    </select>
+    <button class="btn primary" id="showBtn">SHOW NEWS</button>
+    <button class="btn" id="refreshBtn">Refresh News</button>
+    <button class="btn" id="clearBtn">Clear Filters</button>
+    <button class="btn" id="allBtn">Select All Newspapers</button>
+  </div>
+</header>
+<main id="contentMain">
+  <div class="stats ui">
+    <span>Articles: <b id="sArt">0</b></span>
+    <span>Newspapers selected: <b id="sPap">0</b></span>
+    <span>Feeds loaded: <b id="sOk">0</b></span>
+    <span>Last updated: <b id="sTime">never</b></span>
+  </div>
+  <div class="notes ui" id="notes"></div>
+  <div class="grid" id="grid"></div>
+</main>
+<footer class="ui">
+  Headlines and short summaries link to the original publishers. Feeds are fetched live from publisher RSS endpoints in your browser.
+  Some publishers block direct browser access (CORS), so requests fall back to public CORS proxies. Those proxies are third-party, free and not guaranteed to stay available; public relays are third-party, free and may be unavailable temporarily.
+</footer>
+
+<script>
+'use strict';
+/* ---------- CONFIG ----------
+   Feed URLs are publisher RSS endpoints as publicly documented/known. Publishers change them without notice;
+   any that fail are reported in the UI rather than hidden. Publishers with no known public feed
+   (Outlook India, Dainik Jagran) are intentionally not listed, per "show only sources with configured feeds".
+   PROXIES: free CORS proxies, NOT guaranteed to stay free or online. {u} is replaced by the encoded feed URL. */
+// Keyless CORS relay first; allorigins is a best-effort fallback.
+// Public relays can be rate-limited or temporarily unavailable.
+const PROXY_BUILDERS=[
+  feed=>'https://api.allorigins.win/raw?url='+encodeURIComponent(feed),
+  feed=>'https://corsproxy.io/?url='+encodeURIComponent(feed),
+  feed=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(feed),
+  feed=>'https://cors.isomorphic-git.org/'+feed,
+  feed=>'https://proxy.cors.dev/'+feed
+];
+// Paste your Cloudflare Worker URL here, e.g. 'https://news-proxy.yourname.workers.dev/'
+const WORKER_URL='https://sparkling-glade-bb6d.webmiscuser.workers.dev/';
+if(WORKER_URL)PROXY_BUILDERS.unshift(feed=>WORKER_URL+(WORKER_URL.includes('?')?'':'?')+'url='+encodeURIComponent(feed));
+const DIRECT_TIMEOUT_MS=4000, PROXY_TIMEOUT_MS=9000, STAGGER_MS=600, MAX_FEEDS_TRIED=2;
+const CACHE_TTL=10*60*1000, AUTO_REFRESH_MS=15*60*1000;
+const SOURCES=[
+ {id:'ht',name:'Hindustan Times',feeds:['https://www.hindustantimes.com/feeds/rss/latest/rssfeed.xml']},
+ {id:'hindu',name:'The Hindu',feeds:['https://www.thehindu.com/feeder/default.rss','https://www.thehindu.com/news/national/feeder/default.rss']},
+ {id:'ie',name:'The Indian Express',feeds:['https://indianexpress.com/feed/','https://indianexpress.com/rss/']},
+ {id:'toi',name:'Times of India',feeds:['https://timesofindia.indiatimes.com/rssfeedstopstories.cms']},
+ {id:'wire',name:'The Wire',feeds:['https://cms.thewire.in/feed','https://thewire.in/feed/']},
+ {id:'ndtv',name:'NDTV',feeds:['https://feeds.feedburner.com/ndtvnews-latest']},
+ {id:'it',name:'India Today',feeds:['https://www.indiatoday.in/rss/1206578']},
+ {id:'print',name:'The Print',feeds:['https://theprint.in/feed/','https://theprint.in/category/india/feed/','https://theprint.in/category/politics/feed/','https://theprint.in/category/economy/feed/']},
+ {id:'scroll',name:'Scroll.in',feeds:['https://feeds.feedburner.com/ScrollinArticles.rss']},
+ {id:'tnie',name:'New Indian Express',feeds:['https://www.newindianexpress.com/feed','https://www.newindianexpress.com/Nation/rssfeed/?id=170&getXmlFeed=true','https://www.newindianexpress.com/rssfeed/','https://www.newindianexpress.com/rss']},
+ {id:'dh',name:'Deccan Herald',feeds:['https://www.deccanherald.com/feed','https://www.deccanherald.com/rss-feed/','https://www.deccanherald.com/rss-feed/india']},
+ {id:'tribune',name:'The Tribune',feeds:['https://publish.tribuneindia.com/newscategory/nation/feed/','https://publish.tribuneindia.com/newscategory/india/feed/','https://www.tribuneindia.com/rss/feed?catId=1']},
+ {id:'mint',name:'Livemint',feeds:['https://www.livemint.com/rss/news']},
+ {id:'bs',name:'Business Standard',feeds:['https://www.business-standard.com/rss/latest.rss']},
+ {id:'n18',name:'News18',feeds:['https://www.news18.com/commonfeeds/v1/eng/rss/india.xml']},
+ {id:'fp',name:'Firstpost',feeds:['https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml']},
+ {id:'bhaskar',name:'Dainik Bhaskar',feeds:['https://www.bhaskar.com/rss-v1--category-1061.xml']},
+ {id:'abp',name:'ABP News',feeds:['https://news.abplive.com/home/feed']}
+];
+const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it'];
+const CATS=['All News','Politics','National','International','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
+/* Keyword rules use word boundaries to limit false positives. Title matches are used; RSS category tags are added to the text. */
+const RULES={
+ 'Politics':/\b(bjp|congress|aap|tmc|lok sabha|rajya sabha|election|poll|mla|mp|minister|chief minister|opposition|parliament|assembly|party)\b/i,
+ 'International':/\b(us|u\.s\.|china|pakistan|russia|ukraine|gaza|israel|trump|biden|un|nato|world|britain|uk|europe|iran|bangladesh|nepal|sri lanka)\b/i,
+ 'Business':/\b(sensex|nifty|stock|shares|market|company|ipo|profit|revenue|bank|rbi|rupee|earnings|merger|business)\b/i,
+ 'Economy':/\b(gdp|inflation|economy|fiscal|budget|gst|tax|trade deficit|exports|imports|repo rate|economic)\b/i,
+ 'Technology':/\b(tech|smartphone|iphone|android|google|apple|microsoft|software|app|5g|cyber|semiconductor|gadget)\b/i,
+ 'Artificial Intelligence':/\b(ai|artificial intelligence|chatgpt|openai|llm|machine learning|generative|gemini|claude|deepfake)\b/i,
+ 'Science':/\b(isro|nasa|space|scientist|research|study finds|astronomy|physics|climate science|satellite|chandrayaan)\b/i,
+ 'Education':/\b(exam|neet|jee|cbse|ugc|university|school|students?|admission|result|board exams?|college|iit|upsc)\b/i,
+ 'Sports':/\b(match|tournament|olympic|football|hockey|tennis|badminton|athlete|fifa|ipl|medal|kabaddi|champion)\b/i,
+ 'Cricket':/\b(cricket|ipl|bcci|test match|odi|t20|wicket|batsman|bowler|kohli|rohit sharma|dhoni)\b/i,
+ 'Entertainment':/\b(film|movie|series|ott|netflix|actor|actress|box office|trailer|album|singer|web series)\b/i,
+ 'Bollywood':/\b(bollywood|shah rukh|salman khan|aamir|deepika|alia bhatt|ranveer|akshay kumar|hindi film)\b/i,
+ 'Health':/\b(health|hospital|doctor|disease|virus|vaccine|cancer|diabetes|covid|medical|who|icmr|dengue)\b/i,
+ 'Lifestyle':/\b(lifestyle|fashion|travel|recipe|wellness|fitness|diet|relationship|festival|wedding)\b/i,
+ 'Environment':/\b(pollution|climate|aqi|air quality|wildlife|forest|flood|monsoon|emission|global warming|biodiversity)\b/i,
+ 'Crime':/\b(murder|arrested|arrest|police|rape|fir|theft|robbery|killed|accused|cbi|ed|court|scam|fraud)\b/i,
+ 'Government & Policies':/\b(scheme|policy|cabinet|notification|ministry|government|bill|ordinance|yojana|supreme court|high court|regulation)\b/i,
+ 'Startups':/\b(startup|start-up|funding round|unicorn|venture capital|founder|series a|series b|seed round)\b/i,
+ 'Automobile':/\b(car|cars|suv|ev|electric vehicle|bike|motorcycle|tesla|maruti|tata motors|mahindra|automobile|scooter)\b/i,
+ 'Agriculture':/\b(farmer|farmers|crop|msp|kharif|rabi|agriculture|irrigation|fertiliser|fertilizer|paddy|wheat)\b/i
+};
+const NATIONAL=/\b(india|indian|delhi|mumbai|kolkata|chennai|bengaluru|hyderabad|modi|centre|state)\b/i;
+
+/* ---------- STATE ---------- */
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const savedPrefs=LS.get('inh_prefs',null)||{};
+const prefs={
+  papers:Array.isArray(savedPrefs.papers)?savedPrefs.papers.filter(id=>SOURCES.some(s=>s.id===id)):DEFAULT_PAPERS.slice(),
+  cats:Array.isArray(savedPrefs.cats)?savedPrefs.cats.filter(c=>CATS.includes(c)):['All News'],
+  range:['latest','24','48','168'].includes(String(savedPrefs.range))?String(savedPrefs.range):'latest',
+  theme:['dark','light'].includes(savedPrefs.theme)?savedPrefs.theme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')
+};
+if(!prefs.cats.length)prefs.cats=['All News'];
+let articles=[],loadId=0,feedStats={ok:0},lastUpdated=null;
+let savedArticles=LS.get('dnh_saved_articles',[]);if(!Array.isArray(savedArticles))savedArticles=[];
+let showingSaved=false;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
+const savePrefs=()=>LS.set('inh_prefs',prefs);
+
+/* ---------- Multi-select dropdown ---------- */
+function makeDD(root,{label,items,getSel,setSel,onAll,onClear,allText}){
+  const id='dd'+Math.random().toString(36).slice(2,6);
+  root.innerHTML=`<button class="ddbtn" aria-expanded="false"></button><div class="panel"><input type="search" placeholder="Search…" aria-label="Search ${esc(label)}"><div class="acts"><button class="btn" data-a="all">${allText}</button><button class="btn" data-a="clear">Clear All</button><button class="btn" data-a="close" aria-label="Minimise list">Done ▲</button></div><div class="list"></div></div>`;
+  const btn=root.querySelector('.ddbtn'),inp=root.querySelector('input'),list=root.querySelector('.list');
+  function draw(){
+    const sel=getSel(),f=inp.value.toLowerCase();
+    list.innerHTML=items.filter(i=>i.name.toLowerCase().includes(f)).map(i=>`<label><input type="checkbox" value="${esc(i.id)}" ${sel.includes(i.id)?'checked':''}> ${esc(i.name)}</label>`).join('')||'<div class="empty">No match</div>';
+    btn.textContent=`${label}: ${sel.length?sel.length+' selected':'none'}`;
+  }
+  list.addEventListener('change',e=>{const v=e.target.value,s=new Set(getSel());e.target.checked?s.add(v):s.delete(v);setSel([...s]);draw()});
+  inp.addEventListener('input',draw);
+  root.querySelector('[data-a=all]').onclick=()=>{onAll();draw()};
+  root.querySelector('[data-a=clear]').onclick=()=>{onClear();draw()};
+  const close=()=>{root.classList.remove('open');btn.setAttribute('aria-expanded',false)};
+  root.querySelector('[data-a=close]').onclick=()=>{close();btn.focus()};
+  root.addEventListener('keydown',e=>{if(e.key==='Escape'){close();btn.focus()}});
+  btn.onclick=()=>{const o=root.classList.toggle('open');btn.setAttribute('aria-expanded',o);if(o)inp.focus()};
+  document.addEventListener('click',e=>{if(!root.contains(e.target)){root.classList.remove('open');btn.setAttribute('aria-expanded',false)}});
+  draw();return draw;
+}
+let drawP,drawC;
+function initDD(){
+  drawP=makeDD($('#ddPapers'),{label:'Select Newspapers',items:SOURCES,allText:'Select All',
+    getSel:()=>prefs.papers,setSel:v=>{prefs.papers=v;updCounts()},onAll:()=>{prefs.papers=SOURCES.map(s=>s.id);updCounts()},onClear:()=>{prefs.papers=[];updCounts()}});
+  drawC=makeDD($('#ddCats'),{label:'Select Categories (Optional)',items:CATS.map(c=>({id:c,name:c})),allText:'All News',
+    getSel:()=>prefs.cats,setSel:v=>{prefs.cats=v},onAll:()=>{prefs.cats=['All News']},onClear:()=>{prefs.cats=[]}});
+}
+const updCounts=()=>{$('#sPap').textContent=prefs.papers.length};
+
+/* ---------- Fetching ---------- */
+async function timedFetch(url,timeoutMs){
+  let timer;
+  try{
+    const timeout=new Promise((_,reject)=>{
+      timer=setTimeout(()=>{reject(new Error('timed out after '+Math.round(timeoutMs/1000)+'s'))},timeoutMs);
+    });
+    const request=(async()=>{
+      const response=await fetch(url,{credentials:'omit'});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      return await response.text();
+    })();
+    request.catch(()=>{});
+    return await Promise.race([request,timeout]);
+  }finally{clearTimeout(timer)}
+}
+// Hedged race: direct request first, then each proxy starts STAGGER_MS later.
+// The first one that returns a valid feed wins and the rest are aborted.
+function fetchFirst(feed){
+  const attempts=[{url:feed,timeout:DIRECT_TIMEOUT_MS},...PROXY_BUILDERS.map(b=>({url:b(feed),timeout:PROXY_TIMEOUT_MS}))];
+  return new Promise((resolve,reject)=>{
+    const timers=[];
+    let pending=attempts.length,done=false;const errs=[];
+    attempts.forEach((at,i)=>{
+      timers.push(setTimeout(async()=>{
+        if(done)return;
+                try{
+          const items=parseFeed(await timedFetch(at.url,at.timeout));
+          if(!done){done=true;timers.forEach(clearTimeout);resolve(items)}
+        }catch(e){let h='?';try{h=new URL(at.url).hostname.replace(/^(www|api)\./,'')}catch(_){}errs.push(h+': '+(e&&e.message?e.message:'network error'))}
+        if(--pending===0&&!done)reject(new Error(errs.join(' | ')));
+      },i*STAGGER_MS));
+    });
+  });
+}
+function parseFeed(xml){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  if(doc.querySelector('parsererror')||!doc.querySelector('item,entry'))throw new Error('Not a valid RSS/Atom feed');
+  const txt=(n,t)=>{const e=n.getElementsByTagName(t)[0];return e?e.textContent.trim():''};
+  const plain=h=>{const d=new DOMParser().parseFromString(h||'','text/html');return(d.body.textContent||'').replace(/\s+/g,' ').trim()};
+  return [...doc.querySelectorAll('item,entry')].map(n=>{
+    let link=txt(n,'link');
+    if(!link){const l=n.querySelector('link[href]');link=l?l.getAttribute('href'):''}
+    const raw=txt(n,'description')||txt(n,'summary')||txt(n,'content');
+    const enc=txt(n,'content:encoded');
+    let img='';
+    const m=n.getElementsByTagName('media:content')[0]||n.getElementsByTagName('media:thumbnail')[0];
+    if(m)img=m.getAttribute('url')||'';
+    if(!img){const en=n.getElementsByTagName('enclosure')[0];if(en&&/image/.test(en.getAttribute('type')||''))img=en.getAttribute('url')||''}
+    if(!img){const g=(enc||raw).match(/<img[^>]+src=["']([^"']+)/i);if(g)img=g[1]}
+    const ds=txt(n,'pubDate')||txt(n,'published')||txt(n,'updated')||txt(n,'dc:date');
+    const t=ds?Date.parse(ds):NaN;
+    return{title:plain(txt(n,'title')),link:safeUrl(link),summary:plain(raw).slice(0,220),img:safeUrl(img),
+      date:isNaN(t)?null:t,rssCats:[...n.getElementsByTagName('category')].map(c=>c.textContent.trim()).join(' ')};
+  }).filter(a=>a.title&&a.link);
+}
+async function loadSource(src,force){
+  const key='inh_c_'+src.id,c=LS.get(key,null);
+  if(!force&&c&&Date.now()-c.t<CACHE_TTL)return{items:c.items,cached:true};
+  let lastErr='';
+  for(const feed of src.feeds.slice(0,MAX_FEEDS_TRIED)){
+    try{
+      const items=await fetchFirst(feed);
+      LS.set(key,{t:Date.now(),items});
+      return{items};
+    }catch(e){lastErr=e&&e.message?e.message:'Network request failed'}
+  }
+  // Last resort: Google News RSS for this publisher's domain (headlines only, no images)
+  try{
+    const host=new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,'');
+    const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:2d')+'&hl=en-IN&gl=IN&ceid=IN:en';
+    const items=(await fetchFirst(gn)).map(a=>({...a,title:a.title.replace(/\s+-\s+[^-]+$/,''),summary:'',img:''}));
+    if(items.length){LS.set(key,{t:Date.now(),items});return{items,viaGN:true}}
+  }catch(e){lastErr+=' || Google News fallback: '+(e&&e.message?e.message:'failed')}
+  if(c)return{items:c.items,stale:true,err:lastErr};
+  throw new Error(lastErr||'unreachable');
+}
+
+/* ---------- Classification, filtering, dedupe ---------- */
+function classify(a){
+  const hay=a.title+' '+a.rssCats;const hits=[];
+  for(const[k,r]of Object.entries(RULES))if(r.test(hay))hits.push(k);
+  if(!hits.length&&NATIONAL.test(a.title))hits.push('National');
+  if(hits.includes('Cricket')&&!hits.includes('Sports'))hits.push('Sports');
+  if(hits.includes('Bollywood')&&!hits.includes('Entertainment'))hits.push('Entertainment');
+  if(/\b(national|india)\b/i.test(a.rssCats)&&!hits.includes('National'))hits.push('National');
+  return hits.length?hits:['General'];
+}
+const STOP=new Set('the a an of to in on for and or at by with is are was be as from after over says said new how why what who will its it this that into amid'.split(' '));
+const toks=t=>new Set(t.toLowerCase().replace(/[^a-z0-9\u0900-\u097f ]/g,' ').split(/\s+/).filter(w=>w.length>2&&!STOP.has(w)));
+function sim(a,b){let i=0;for(const w of a)if(b.has(w))i++;const u=a.size+b.size-i;return u?i/u:0}
+function group(list){
+  const groups=[];
+  for(const a of list){
+    a._t=a._t||toks(a.title);
+    const g=a._t.size>=4&&groups.find(g=>g.main.pub!==a.pub&&!g.others.some(o=>o.pub===a.pub)&&sim(g.main._t,a._t)>=0.6);
+    g?g.others.push(a):groups.push({main:a,others:[]});
+  }
+  return groups;
+}
+function articleKey(a){return a.link||((a.title||'')+'|'+(a.pub||''));}
+function isArticleSaved(a){const key=articleKey(a);return savedArticles.some(x=>articleKey(x)===key);}
+function updateSavedCount(){const el=$('#savedCount');if(el)el.textContent=savedArticles.length;}
+function toggleSavedArticle(a){
+  const key=articleKey(a);
+  if(isArticleSaved(a))savedArticles=savedArticles.filter(x=>articleKey(x)!==key);
+  else savedArticles.unshift({...a,_t:undefined});
+  LS.set('dnh_saved_articles',savedArticles);
+  updateSavedCount();
+  if(showingSaved)render(group(savedArticles));
+  else view();
+}
+function view(){
+  if(showingSaved){render(group(savedArticles));return;}
+  const q=$('#q').value.trim().toLowerCase(),cats=prefs.cats.filter(c=>c!=='All News');
+  const hrs=prefs.range==='latest'?0:+prefs.range,now=Date.now();
+  let list=articles.filter(a=>prefs.papers.includes(a.pid));
+  if(cats.length)list=list.filter(a=>a.cats.some(c=>cats.includes(c)));
+  if(hrs)list=list.filter(a=>a.date&&now-a.date<=hrs*36e5);
+  if(q)list=list.filter(a=>(a.title+' '+a.summary).toLowerCase().includes(q));
+  list.sort((x,y)=>(y.date||0)-(x.date||0));
+  render(group(list));
+}
+/* ---------- AI summaries (via Netlify function) ---------- */
+const SUMMARY_ENDPOINT='/.netlify/functions/summarize';
+const sumState={};   // key -> {open,status,text,basis,err}
+function getSum(key){
+  if(!sumState[key]){
+    const c=LS.get('inh_sum_'+key,null);
+    sumState[key]=c&&c.text?{open:false,status:'done',text:c.text,basis:c.basis}:{open:false,status:'idle'};
+  }
+  return sumState[key];
+}
+function paintSummary(key){
+  const st=getSum(key);
+  const sel=window.CSS&&CSS.escape?CSS.escape(key):key.replace(/"/g,'\\"');
+  const box=document.querySelector('[data-sum-box="'+sel+'"]');
+  const btn=document.querySelector('[data-sum-key="'+sel+'"]');
+  if(!box||!btn)return;
+  btn.setAttribute('aria-expanded',String(st.open));
+  btn.textContent=st.status==='loading'?'⏳ Summarizing…':(st.open?'✕ Hide summary':'✨ Summary');
+  btn.disabled=st.status==='loading';
+  box.hidden=!st.open;
+  if(!st.open)return;
+  if(st.status==='loading')box.innerHTML='<div class="sum-loading">Reading the article and writing a summary…</div>';
+  else if(st.status==='error')box.innerHTML='<div class="sum-err">'+esc(st.err||'Could not summarize this article.')+' You can still tap the card to read it.</div>';
+  else box.innerHTML='<div class="sum-text">'+esc(st.text).replace(/\n/g,'<br>')+'</div>'+(st.basis==='snippet'?'<div class="sum-note">Based on the headline and short preview only (the full article could not be read).</div>':'');
+}
+async function toggleSummary(a){
+  const key=articleKey(a),st=getSum(key);
+  if(st.status==='loading')return;
+  if(st.open){st.open=false;paintSummary(key);return}
+  st.open=true;
+  if(st.status==='done'){paintSummary(key);return}
+  st.status='loading';paintSummary(key);
+  try{
+    const r=await fetch(SUMMARY_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:a.link,title:a.title,snippet:a.summary||''})});
+    let d={};try{d=await r.json()}catch(e){}
+    if(!r.ok||!d.summary)throw new Error(r.status===404?'Summaries only work on the deployed site, not when opened as a local file.':(d.error||'Could not summarize this article.'));
+    st.status='done';st.text=d.summary;st.basis=d.basis;
+    LS.set('inh_sum_'+key,{text:d.summary,basis:d.basis});
+  }catch(e){
+    st.status='error';st.err=e&&e.message?e.message:'';
+  }
+  paintSummary(key);
+}
+const fmt=d=>d?new Date(d).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Date unavailable';
+function render(groups){
+  const g=$('#grid');
+  $('#sArt').textContent=groups.length;
+  if(showingSaved)$('#sArt').textContent=savedArticles.length;
+  if(!groups.length){
+    g.innerHTML=`<div class="empty ui" style="grid-column:1/-1"><h2>${showingSaved?'No saved articles':(articles.length?'No stories match these filters':'No news loaded')}</h2><p>${showingSaved?'Tap ☆ Save on any news card to keep it here.':(articles.length?'Clear a filter or widen the date range.':'Check your connection, then press Refresh News. Feeds that failed are listed above.')}</p></div>`;return;
+  }
+  g.innerHTML=groups.map(({main:a,others})=>`<article class="card" data-link="${esc(a.link)}">
+    ${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:''}
+    <div class="body"><div class="meta ui"><span class="pub">${esc(a.pub)}</span><span>${esc(a.cats[0])}</span><span>${fmt(a.date)}</span></div>
+    <h2>${esc(a.title)}</h2>${a.summary?`<p>${esc(a.summary)}</p>`:''}
+    ${others.length?`<div class="also ui">Also covered by: ${others.map(o=>`<a href="${esc(o.link)}" target="_blank" rel="noopener noreferrer">${esc(o.pub)}</a>`).join('')}</div>`:''}
+    <div class="card-actions ui">
+      <button class="save-article ${isArticleSaved(a)?'is-saved':''}" type="button" data-save-key="${esc(articleKey(a))}" aria-pressed="${isArticleSaved(a)}">${isArticleSaved(a)?'★ Saved':'☆ Save'}</button>
+      <button class="sum-btn" type="button" data-sum-key="${esc(articleKey(a))}" aria-expanded="false">✨ Summary</button>
+    </div><div class="sum-box ui" data-sum-box="${esc(articleKey(a))}" hidden></div></div></article>`).join('');
+  g.querySelectorAll('.card[data-link]').forEach(card=>card.addEventListener('click',e=>{
+    if(e.target.closest('.save-article,.sum-btn,.sum-box,a,button'))return; // Save button and real links behave normally
+    const url=card.getAttribute('data-link');
+    if(url)window.open(url,'_blank','noopener,noreferrer');
+  }));
+  g.querySelectorAll('[data-sum-key]').forEach(btn=>{
+    const key=btn.getAttribute('data-sum-key');
+    paintSummary(key);
+    btn.addEventListener('click',()=>{
+      const article=groups.flatMap(x=>[x.main,...x.others]).find(x=>articleKey(x)===key);
+      if(article)toggleSummary(article);
+    });
+  });
+  g.querySelectorAll('[data-save-key]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.getAttribute('data-save-key');
+    const article=groups.flatMap(x=>[x.main,...x.others]).find(x=>articleKey(x)===key);
+    if(article)toggleSavedArticle(article);
+  }));
+}
+
+/* ---------- Orchestration ---------- */
+function note(msg,info){const d=document.createElement('div');d.className='note'+(info?' info':'');d.textContent=msg;$('#notes').appendChild(d);return d}
+async function load(force){
+  const id=++loadId;$('#notes').innerHTML='';
+  const srcs=SOURCES.filter(s=>prefs.papers.includes(s.id));
+  updCounts();
+  if(!srcs.length){articles=[];$('#sOk').textContent=0;note('Select at least one newspaper, then press Show News.',true);view();return}
+  if(!navigator.onLine)note('You appear to be offline. Showing cached news where available.',true);
+  const bySource={};
+  const tag=(s,items)=>items.map(a=>({...a,pid:s.id,pub:s.name,cats:classify(a)}));
+  const rebuild=()=>{articles=srcs.flatMap(s=>bySource[s.id]||[])};
+  // 1) Paint whatever is cached right away (even if older than the TTL)
+  srcs.forEach(s=>{const c=LS.get('inh_c_'+s.id,null);if(c&&Array.isArray(c.items))bySource[s.id]=tag(s,c.items)});
+  rebuild();
+  if(articles.length)view();else $('#grid').innerHTML='<div class="skel"></div>'.repeat(6);
+  // 2) Fetch live in parallel; render each source as soon as it arrives
+  const total=srcs.length,status=note('Updating news\u2026',true);
+  let ok=0,finished=0,timer=null;
+  const refresh=()=>{timer=null;if(id!==loadId)return;rebuild();view()};
+  const schedule=()=>{if(!timer)timer=setTimeout(refresh,150)};
+  await Promise.all(srcs.map(async s=>{
+    try{
+      const r=await loadSource(s,force);
+      if(id!==loadId)return;
+      bySource[s.id]=tag(s,r.items);ok++;
+      if(r.viaGN)note(`${s.name}: its own feed is blocked, so headlines are loaded via Google News (no images or summaries).`,true);
+      if(r.stale)note(`${s.name}: live fetch failed (${r.err}); showing earlier saved results.`);
+      else{lastUpdated=new Date();$('#sTime').textContent=lastUpdated.toLocaleTimeString('en-IN')}
+    }catch(e){
+      if(id!==loadId)return;
+      note(`${s.name}: feed could not be loaded (${e&&e.message?e.message:'network error'}).`);
+    }
+    if(id!==loadId)return;
+    finished++;
+    $('#sOk').textContent=`${ok}/${total}`;
+    status.textContent=`Updating news\u2026 ${finished}/${total} sources checked`;
+    schedule();
+  }));
+  if(id!==loadId)return;
+  clearTimeout(timer);status.remove();
+  if(!ok)note('All selected feeds failed. Check your internet connection and try Refresh News. If this keeps happening, the publishers or public CORS relays may be temporarily blocking requests.',true);
+  rebuild();view();
+}
+
+/* ---------- Wiring ---------- */
+function applyTheme(){
+  document.documentElement.dataset.theme=prefs.theme;
+  const b=$('#themeBtn');
+  if(b){
+    const dark=prefs.theme==='dark';
+    b.textContent=dark?'☀':'☾';
+    b.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
+    b.title=dark?'Switch to light mode':'Switch to dark mode';
+  }
+}
+function init(){
+  applyTheme();initDD();updateSavedCount();
+  $('#range').value=prefs.range;updCounts();
+  const setFilters=open=>{$('#tools').classList.toggle('hide',!open);$('#contentMain').classList.toggle('filters-mode',open)};
+  const menuBtn=$('#menuBtn'),menu=$('#mainMenu');
+  const closeMenu=()=>{menu.hidden=true;menuBtn.setAttribute('aria-expanded','false');menuBtn.setAttribute('aria-label','Open navigation menu')};
+  menuBtn.onclick=()=>{
+    const opening=menu.hidden;
+    menu.hidden=!opening;
+    menuBtn.setAttribute('aria-expanded',String(opening));
+    menuBtn.setAttribute('aria-label',opening?'Close navigation menu':'Open navigation menu');
+  };
+  menu.addEventListener('click',e=>{
+    const action=e.target.closest('[data-menu-action]')?.dataset.menuAction;
+    if(!action)return;
+    closeMenu();
+    if(action==='home'){setFilters(false);showingSaved=false;view();window.scrollTo({top:0,behavior:'smooth'});}
+    if(action==='saved'){showingSaved=true;$('#q').value='';render(group(savedArticles));window.scrollTo({top:0,behavior:'smooth'});}
+    if(action==='filters'){
+      setFilters(true);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    if(action==='refresh'){load(true);}
+    if(action==='install'&&deferredInstall){
+      deferredInstall.prompt();
+      deferredInstall.userChoice.finally(()=>{deferredInstall=null;$('#installBtn').hidden=true});
+    }
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.menu-wrap'))closeMenu();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();menuBtn.focus();}});
+  setFilters(false); // Start on the news home; filters open only from the hamburger menu.
+  $('#showBtn').onclick=()=>{prefs.range=$('#range').value;savePrefs();setFilters(false);load(false);window.scrollTo({top:0,behavior:'smooth'});};
+  $('#refreshBtn').onclick=()=>load(true);
+  $('#allBtn').onclick=()=>{prefs.papers=SOURCES.map(s=>s.id);drawP();savePrefs();updCounts()};
+  $('#clearBtn').onclick=()=>{prefs.papers=DEFAULT_PAPERS;prefs.cats=['All News'];prefs.range='latest';$('#range').value='latest';$('#q').value='';drawP();drawC();savePrefs();load(false)};
+  $('#themeBtn').onclick=()=>{prefs.theme=prefs.theme==='dark'?'light':'dark';applyTheme();savePrefs()};
+  $('#range').onchange=()=>{prefs.range=$('#range').value;savePrefs();view()};
+  let t;$('#q').oninput=()=>{clearTimeout(t);t=setTimeout(view,200)};
+  addEventListener('online',()=>load(true));
+  addEventListener('offline',()=>note('You are offline. Showing last loaded results.',true));
+  setInterval(()=>{if(!document.hidden)load(true)},AUTO_REFRESH_MS);
+  load(false);                                  // automatic initial load with saved or default prefs
+}
+init();
+
+/* ---------- Install as app (PWA) ---------- */
+let deferredInstall=null;
+addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstall=e;
+  const b=document.getElementById('installBtn');if(b)b.hidden=false;
+});
+addEventListener('appinstalled',()=>{
+  deferredInstall=null;
+  const b=document.getElementById('installBtn');if(b)b.hidden=true;
+});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
