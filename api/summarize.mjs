@@ -123,7 +123,10 @@ function geminiProvider(name, base, headers) {
           const reason = candidate?.finishReason || out?.promptFeedback?.blockReason || 'no text returned';
           throw new ProviderError(502, `Gemini returned no text (${reason})`, 'EMPTY_RESPONSE', reason);
         } catch (e) {
-          const canFallback = i < models.length - 1 && (e.status === 429 || e.status === 503 || e.code === 'EMPTY_RESPONSE');
+          const canFallback = i < models.length - 1 && (
+            e.status === 429 || e.status === 503 || e.code === 'EMPTY_RESPONSE' || !e.status ||
+            e.name === 'AbortError' || e.name === 'TimeoutError'
+          );
           if (!canFallback) throw e;
           console.warn(`Gemini model ${model} failed (${e.status || e.code}); trying ${models[i + 1]}`);
         }
