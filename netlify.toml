@@ -5,11 +5,6 @@
   directory = "netlify/functions"
 
 [[redirects]]
-  from = "/api/feed"
-  to = "/.netlify/functions/feed"
-  status = 200
-
-[[redirects]]
   from = "/api/summarize"
   to = "/.netlify/functions/summarize"
   status = 200

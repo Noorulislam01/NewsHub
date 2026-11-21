@@ -315,10 +315,9 @@ const SOURCES=[
  {id:'bhaskar',name:'Dainik Bhaskar',feeds:['https://www.bhaskar.com/rss-v1--category-1061.xml']},
  {id:'abp',name:'ABP News',feeds:['https://news.abplive.com/home/feed']},
  {id:'orf',name:'Observer Research Foundation',searchHost:'orfonline.org',feeds:['https://www.orfonline.org/feed/']},
- {id:'cfr',name:'Council on Foreign Relations',feeds:['https://www.cfr.org/feed']},
- {id:'mea',name:'Ministry of External Affairs (India)',searchHost:'mea.gov.in',serverFetch:true,feeds:['https://www.mea.gov.in/press-releases.htm?dtl/rss']}
+ {id:'cfr',name:'Council on Foreign Relations',feeds:['https://www.cfr.org/feed']}
 ];
-const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','mea'];
+const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr'];
 const CATS=['All News','Politics','National','International','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
 /* Keyword rules use word boundaries to limit false positives. Title matches are used; RSS category tags are added to the text. */
 const RULES={
@@ -411,9 +410,8 @@ async function timedFetch(url,timeoutMs){
 }
 // Hedged race: direct request first, then each proxy starts STAGGER_MS later.
 // The first one that returns a valid feed wins and the rest are aborted.
-function fetchFirst(feed,serverFetch=false){
-  const apiAttempt=serverFetch?[{url:'/api/feed?url='+encodeURIComponent(feed),timeout:PROXY_TIMEOUT_MS}]:[];
-  const attempts=[...apiAttempt,{url:feed,timeout:DIRECT_TIMEOUT_MS},...PROXY_BUILDERS.map(b=>({url:b(feed),timeout:PROXY_TIMEOUT_MS}))];
+function fetchFirst(feed){
+  const attempts=[{url:feed,timeout:DIRECT_TIMEOUT_MS},...PROXY_BUILDERS.map(b=>({url:b(feed),timeout:PROXY_TIMEOUT_MS}))];
   return new Promise((resolve,reject)=>{
     const timers=[];
     let pending=attempts.length,done=false;const errs=[];
@@ -459,8 +457,7 @@ async function loadSource(src,force){
   const host=src.searchHost||new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,'');
   const days=range==='latest'?2:Math.max(1,Math.ceil(Number(range)/24));
   const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:'+days+'d')+'&hl=en-IN&gl=IN&ceid=IN:en';
-  const fetchFeed=feed=>fetchFirst(feed,!!src.serverFetch);
-  const jobs=[...src.feeds.slice(0,MAX_FEEDS_TRIED).map(fetchFeed),fetchFeed(gn)];
+  const jobs=[...src.feeds.slice(0,MAX_FEEDS_TRIED).map(feed=>fetchFirst(feed)),fetchFirst(gn)];
   const results=await Promise.allSettled(jobs);
   results.forEach((result,i)=>{
     if(result.status!=='fulfilled'){
