@@ -270,7 +270,7 @@ footer{max-width:1200px;margin:auto;padding:16px;color:var(--mute);font-size:.8r
   <div class="grid" id="grid"></div>
 </main>
 <footer class="ui">
-  Headlines and short summaries link to the original publishers. Feeds are fetched live from publisher RSS endpoints in your browser.
+  Headlines and short summaries link to the original publishers. Publisher and Google News RSS feeds are fetched live in your browser; Google News results may not include images or summaries.
   Some publishers block direct browser access (CORS), so requests fall back to public CORS proxies. Those proxies are third-party, free and not guaranteed to stay available; public relays are third-party, free and may be unavailable temporarily.
 </footer>
 
@@ -294,17 +294,17 @@ const PROXY_BUILDERS=[
 const WORKER_URL='https://sparkling-glade-bb6d.webmiscuser.workers.dev/';
 if(WORKER_URL)PROXY_BUILDERS.unshift(feed=>WORKER_URL+(WORKER_URL.includes('?')?'':'?')+'url='+encodeURIComponent(feed));
 const DIRECT_TIMEOUT_MS=4000, PROXY_TIMEOUT_MS=9000, STAGGER_MS=600, MAX_FEEDS_TRIED=2;
-const CACHE_TTL=10*60*1000, AUTO_REFRESH_MS=15*60*1000;
+const CACHE_TTL=10*60*1000, HISTORY_TTL=7*24*60*60*1000, AUTO_REFRESH_MS=15*60*1000;
 const SOURCES=[
  {id:'ht',name:'Hindustan Times',feeds:['https://www.hindustantimes.com/feeds/rss/latest/rssfeed.xml']},
  {id:'hindu',name:'The Hindu',feeds:['https://www.thehindu.com/feeder/default.rss','https://www.thehindu.com/news/national/feeder/default.rss']},
  {id:'ie',name:'The Indian Express',feeds:['https://indianexpress.com/feed/','https://indianexpress.com/rss/']},
  {id:'toi',name:'Times of India',feeds:['https://timesofindia.indiatimes.com/rssfeedstopstories.cms']},
- {id:'wire',name:'The Wire',feeds:['https://cms.thewire.in/feed','https://thewire.in/feed/']},
- {id:'ndtv',name:'NDTV',feeds:['https://feeds.feedburner.com/ndtvnews-latest']},
+ {id:'wire',name:'The Wire',searchHost:'thewire.in',feeds:['https://cms.thewire.in/feed','https://thewire.in/feed/']},
+ {id:'ndtv',name:'NDTV',searchHost:'ndtv.com',feeds:['https://feeds.feedburner.com/ndtvnews-latest']},
  {id:'it',name:'India Today',feeds:['https://www.indiatoday.in/rss/1206578']},
  {id:'print',name:'The Print',feeds:['https://theprint.in/feed/','https://theprint.in/category/india/feed/','https://theprint.in/category/politics/feed/','https://theprint.in/category/economy/feed/']},
- {id:'scroll',name:'Scroll.in',feeds:['https://feeds.feedburner.com/ScrollinArticles.rss']},
+ {id:'scroll',name:'Scroll.in',searchHost:'scroll.in',feeds:['https://feeds.feedburner.com/ScrollinArticles.rss']},
  {id:'tnie',name:'New Indian Express',feeds:['https://www.newindianexpress.com/feed','https://www.newindianexpress.com/Nation/rssfeed/?id=170&getXmlFeed=true','https://www.newindianexpress.com/rssfeed/','https://www.newindianexpress.com/rss']},
  {id:'dh',name:'Deccan Herald',feeds:['https://www.deccanherald.com/feed','https://www.deccanherald.com/rss-feed/','https://www.deccanherald.com/rss-feed/india']},
  {id:'tribune',name:'The Tribune',feeds:['https://publish.tribuneindia.com/newscategory/nation/feed/','https://publish.tribuneindia.com/newscategory/india/feed/','https://www.tribuneindia.com/rss/feed?catId=1']},
@@ -313,9 +313,12 @@ const SOURCES=[
  {id:'n18',name:'News18',feeds:['https://www.news18.com/commonfeeds/v1/eng/rss/india.xml']},
  {id:'fp',name:'Firstpost',feeds:['https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml']},
  {id:'bhaskar',name:'Dainik Bhaskar',feeds:['https://www.bhaskar.com/rss-v1--category-1061.xml']},
- {id:'abp',name:'ABP News',feeds:['https://news.abplive.com/home/feed']}
+ {id:'abp',name:'ABP News',feeds:['https://news.abplive.com/home/feed']},
+ {id:'orf',name:'Observer Research Foundation',searchHost:'orfonline.org',feeds:['https://www.orfonline.org/feed/']},
+ {id:'cfr',name:'Council on Foreign Relations',feeds:['https://www.cfr.org/feed']},
+ {id:'mea',name:'Ministry of External Affairs (India)',searchHost:'mea.gov.in',serverFetch:true,feeds:['https://www.mea.gov.in/press-releases.htm?dtl/rss']}
 ];
-const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it'];
+const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','mea'];
 const CATS=['All News','Politics','National','International','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
 /* Keyword rules use word boundaries to limit false positives. Title matches are used; RSS category tags are added to the text. */
 const RULES={
@@ -408,8 +411,9 @@ async function timedFetch(url,timeoutMs){
 }
 // Hedged race: direct request first, then each proxy starts STAGGER_MS later.
 // The first one that returns a valid feed wins and the rest are aborted.
-function fetchFirst(feed){
-  const attempts=[{url:feed,timeout:DIRECT_TIMEOUT_MS},...PROXY_BUILDERS.map(b=>({url:b(feed),timeout:PROXY_TIMEOUT_MS}))];
+function fetchFirst(feed,serverFetch=false){
+  const apiAttempt=serverFetch?[{url:'/api/feed?url='+encodeURIComponent(feed),timeout:PROXY_TIMEOUT_MS}]:[];
+  const attempts=[...apiAttempt,{url:feed,timeout:DIRECT_TIMEOUT_MS},...PROXY_BUILDERS.map(b=>({url:b(feed),timeout:PROXY_TIMEOUT_MS}))];
   return new Promise((resolve,reject)=>{
     const timers=[];
     let pending=attempts.length,done=false;const errs=[];
@@ -447,25 +451,43 @@ function parseFeed(xml){
   }).filter(a=>a.title&&a.link);
 }
 async function loadSource(src,force){
-  const key='inh_c_'+src.id,c=LS.get(key,null);
-  if(!force&&c&&Date.now()-c.t<CACHE_TTL)return{items:c.items,cached:true};
-  let lastErr='';
-  for(const feed of src.feeds.slice(0,MAX_FEEDS_TRIED)){
-    try{
-      const items=await fetchFirst(feed);
-      LS.set(key,{t:Date.now(),items});
-      return{items};
-    }catch(e){lastErr=e&&e.message?e.message:'Network request failed'}
+  const range=prefs.range,key='inh_c_'+src.id,c=LS.get(key,null),now=Date.now();
+  if(!force&&c&&c.searchRange===range&&now-c.t<CACHE_TTL)return{items:c.items,cached:true};
+  const errors=[],fresh=[];
+  // Keep the publisher's RSS headlines and supplement them with Google News search
+  // results for the selected time range. Each source is allowed to fail independently.
+  const host=src.searchHost||new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,'');
+  const days=range==='latest'?2:Math.max(1,Math.ceil(Number(range)/24));
+  const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:'+days+'d')+'&hl=en-IN&gl=IN&ceid=IN:en';
+  const fetchFeed=feed=>fetchFirst(feed,!!src.serverFetch);
+  const jobs=[...src.feeds.slice(0,MAX_FEEDS_TRIED).map(fetchFeed),fetchFeed(gn)];
+  const results=await Promise.allSettled(jobs);
+  results.forEach((result,i)=>{
+    if(result.status!=='fulfilled'){
+      errors.push((i===jobs.length-1?'Google News':'Publisher RSS')+': '+(result.reason?.message||'request failed'));
+      return;
+    }
+    const fromSearch=i===jobs.length-1;
+    result.value.forEach(a=>fresh.push(fromSearch?{...a,title:a.title.replace(/\s+-\s+[^-]+$/,''),summary:'',img:''}:a));
+  });
+
+  // Merge with the rolling seven-day cache so changing from 24/48 hours to a week
+  // does not lose headlines that an earlier fetch already found.
+  const prior=Array.isArray(c?.items)?c.items:[];
+  const recent=[...prior,...fresh].filter(a=>a.date&&a.date<=now+60*60*1000&&now-a.date<=HISTORY_TTL);
+  const seen=new Set(),items=[];
+  for(const a of recent.sort((x,y)=>(y.date||0)-(x.date||0))){
+    const title=(a.title||'').toLowerCase().replace(/\s+-\s+[^-]+$/,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+    const identity=title.replace(/\s+/g,' ')||(a.link||'').split('?')[0].replace(/\/$/,'');
+    if(!identity||seen.has(identity))continue;
+    seen.add(identity);items.push(a);
   }
-  // Last resort: Google News RSS for this publisher's domain (headlines only, no images)
-  try{
-    const host=new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,'');
-    const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:2d')+'&hl=en-IN&gl=IN&ceid=IN:en';
-    const items=(await fetchFirst(gn)).map(a=>({...a,title:a.title.replace(/\s+-\s+[^-]+$/,''),summary:'',img:''}));
-    if(items.length){LS.set(key,{t:Date.now(),items});return{items,viaGN:true}}
-  }catch(e){lastErr+=' || Google News fallback: '+(e&&e.message?e.message:'failed')}
-  if(c)return{items:c.items,stale:true,err:lastErr};
-  throw new Error(lastErr||'unreachable');
+  if(items.length){
+    LS.set(key,{t:now,searchRange:range,items});
+    return{items};
+  }
+  if(prior.length)return{items:prior,stale:true,err:errors.join(' | ')};
+  throw new Error(errors.join(' | ')||'No dated stories were returned');
 }
 
 /* ---------- Classification, filtering, dedupe ---------- */
@@ -618,7 +640,6 @@ async function load(force){
       const r=await loadSource(s,force);
       if(id!==loadId)return;
       bySource[s.id]=tag(s,r.items);ok++;
-      if(r.viaGN)note(`${s.name}: its own feed is blocked, so headlines are loaded via Google News (no images or summaries).`,true);
       if(r.stale)note(`${s.name}: live fetch failed (${r.err}); showing earlier saved results.`);
       else{lastUpdated=new Date();$('#sTime').textContent=lastUpdated.toLocaleTimeString('en-IN')}
     }catch(e){
@@ -684,7 +705,7 @@ function init(){
   $('#allBtn').onclick=()=>{prefs.papers=SOURCES.map(s=>s.id);drawP();savePrefs();updCounts()};
   $('#clearBtn').onclick=()=>{prefs.papers=DEFAULT_PAPERS;prefs.cats=['All News'];prefs.range='latest';$('#range').value='latest';$('#q').value='';drawP();drawC();savePrefs();load(false)};
   $('#themeBtn').onclick=()=>{prefs.theme=prefs.theme==='dark'?'light':'dark';applyTheme();savePrefs()};
-  $('#range').onchange=()=>{prefs.range=$('#range').value;savePrefs();view()};
+  $('#range').onchange=()=>{prefs.range=$('#range').value;savePrefs();load(false)};
   let t;$('#q').oninput=()=>{clearTimeout(t);t=setTimeout(view,200)};
   addEventListener('online',()=>load(true));
   addEventListener('offline',()=>note('You are offline. Showing last loaded results.',true));

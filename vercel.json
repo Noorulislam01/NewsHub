@@ -1,5 +1,8 @@
 {
   "functions": {
+    "api/feed.mjs": {
+      "maxDuration": 15
+    },
     "api/summarize.mjs": {
       "maxDuration": 60
     }
