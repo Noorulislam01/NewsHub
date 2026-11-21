@@ -142,7 +142,7 @@ function buildProviders() {
 }
 
 export async function handleSummarize(req) {
-  if (req.method === 'GET') return json(200, { ok: true, service: 'summary' });
+  if (req.method === 'GET') return json(200, { ok: true, service: 'summary', diagnostics: 'provider-errors-v2' });
   if (req.method !== 'POST') return json(405, { error: 'Use POST.' });
 
   const allowed = process.env.ALLOWED_ORIGIN;
@@ -202,6 +202,10 @@ export async function handleSummarize(req) {
     error = 'Gemini could not find the configured model. Check GEMINI_MODEL in Vercel; the default is gemini-3.8-flash.';
   } else if (lastFailure?.provider === 'Gemini' && lastFailure.status === 400) {
     error = 'Gemini rejected the request. Check the Vercel function logs for details.';
+  } else if (lastFailure?.status) {
+    error = `${lastFailure.provider} returned HTTP ${lastFailure.status}. Check the Vercel function logs for details.`;
+  } else if (lastFailure) {
+    error = `${lastFailure.provider} timed out or could not be reached. Try again, then check the Vercel function logs if it continues.`;
   }
   return json(sawRateLimit ? 429 : 502, {
     error
