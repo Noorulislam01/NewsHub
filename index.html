@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>DILSHAD NEWS HUB</title>
+<title>One News Hub</title>
 <style>
 :root{--bg:#f6f5f2;--surface:#fff;--ink:#1b1f2a;--mute:#5d6577;--line:#e2e0da;--accent:#c2410c;--accent-ink:#fff;--chip:#eceae4;--ok:#15803d;--err:#b91c1c}
 :root[data-theme=dark]{--bg:#12151c;--surface:#1b2029;--ink:#eceef3;--mute:#9aa3b5;--line:#2a313d;--accent:#fb923c;--accent-ink:#1a1206;--chip:#262d39;--ok:#4ade80;--err:#f87171}
@@ -133,7 +133,7 @@ body.filters-open footer.site-footer{margin-top:auto}
 .menu-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
 .menu-toggle[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)}
 .menu-panel{
-  position:absolute;top:calc(100% + 10px);left:0;width:220px;padding:8px;
+  position:absolute;top:calc(100% + 10px);right:0;left:auto;width:220px;padding:8px;
   display:flex;flex-direction:column;gap:4px;background:var(--surface);
   border:1px solid var(--line);border-radius:14px;
   box-shadow:0 16px 38px rgba(0,0,0,.18);z-index:60;
@@ -286,6 +286,8 @@ body.filters-open footer.site-footer{margin-top:auto}
 <body>
 <header class="ui" id="pageTop">
   <div class="bar">
+    <button class="btn theme-icon" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch theme">&#9790;</button>
+    <div class="brand">One <span>News</span> Hub</div>
     <div class="menu-wrap">
       <button class="btn menu-toggle" id="menuBtn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainMenu" title="Menu">
         <span></span><span></span><span></span>
@@ -298,8 +300,6 @@ body.filters-open footer.site-footer{margin-top:auto}
         <button type="button" data-menu-action="install" id="installBtn" hidden><span class="menu-symbol">⬇</span>Install app</button>
       </nav>
     </div>
-    <div class="brand">DILSHAD <span>NEWS</span> HUB</div>
-    <button class="btn theme-icon" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch theme">☾</button>
   </div>
   <div class="tools hide" id="tools">
     <input type="search" id="q" placeholder="Search news" aria-label="Search news">
@@ -331,11 +331,11 @@ body.filters-open footer.site-footer{margin-top:auto}
     <div class="footer-copy">
       <p class="footer-tagline">A clearer view of the stories shaping today.</p>
       <div class="footer-meta">
-        <span>© <span id="footerYear"></span> Dilshad News Hub</span>
+        <span>© <span id="footerYear"></span> One News Hub</span>
         <span>Read every story at its original source.</span>
       </div>
     </div>
-    <img class="footer-logo" src="icon-192.png" alt="Dilshad News Hub logo" width="74" height="74">
+    <img class="footer-logo" src="icon-192.png" alt="One News Hub logo" width="74" height="74">
   </div>
 </footer>
 

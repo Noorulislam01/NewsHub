@@ -1,6 +1,6 @@
 {
-  "name": "DILSHAD NEWS HUB",
-  "short_name": "News Hub",
+  "name": "One News Hub",
+  "short_name": "One News",
   "description": "Latest news from many newspapers in one place.",
   "id": "./",
   "start_url": "./index.html",
