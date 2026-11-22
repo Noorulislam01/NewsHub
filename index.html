@@ -50,7 +50,7 @@ main{max-width:1200px;margin:auto;padding:16px}
 .notes{display:grid;gap:6px;margin-bottom:12px}
 .note{padding:8px 12px;border-radius:8px;font-size:.88rem;background:var(--chip);border-left:4px solid var(--err)}
 .note.info{border-color:var(--mute)}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));scroll-margin-top:150px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .card[data-link]{cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;transition:transform .12s ease}
 .card[data-link]:active{transform:scale(.985)}
@@ -735,7 +735,7 @@ function init(){
     if(!button)return;
     activeCategory=button.dataset.categoryNav||null;
     view();
-    window.scrollTo({top:0,behavior:'smooth'});
+    $('#grid').scrollIntoView({behavior:'smooth',block:'start'});
   });
   document.addEventListener('click',e=>{if(!e.target.closest('.menu-wrap'))closeMenu();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();menuBtn.focus();}});
