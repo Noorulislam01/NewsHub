@@ -91,19 +91,21 @@ body.filters-open footer.site-footer{margin-top:auto}
 
 
 
-/* Keep the masthead title visually centered between the menu and theme controls */
+/* Keep the brand beside its logo and the controls aligned to the right */
 .bar{position:relative;justify-content:space-between;min-height:64px}
 .brand{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  margin:0;text-align:center;white-space:nowrap;max-width:calc(100% - 164px);
-  overflow:hidden;text-overflow:ellipsis;pointer-events:none;
+  position:static;transform:none;margin:0;text-align:left;white-space:nowrap;
+  max-width:240px;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;
 }
 .theme-icon{margin-left:0;flex:0 0 44px}
 .header-logo{display:block;width:44px;height:44px;flex:0 0 44px;border-radius:12px;object-fit:cover}
+.header-brand{display:flex;align-items:center;gap:10px;min-width:0}
 .header-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 @media(max-width:700px){
   .bar{min-height:62px}
-  .brand{font-size:clamp(.92rem,4.2vw,1.22rem);letter-spacing:-.035em;max-width:calc(100% - 164px)}
+  .header-brand{gap:8px}
+  .header-logo{width:40px;height:40px;flex-basis:40px;border-radius:11px}
+  .brand{font-size:clamp(.92rem,4.2vw,1.12rem);letter-spacing:-.035em;max-width:calc(100vw - 190px)}
 }
 
 
@@ -288,8 +290,10 @@ body.filters-open footer.site-footer{margin-top:auto}
 <body>
 <header class="ui" id="pageTop">
   <div class="bar">
-    <img class="header-logo" src="one-news-hub-192.png" alt="One News Hub logo" width="44" height="44">
-    <div class="brand">One <span>News</span> Hub</div>
+    <div class="header-brand">
+      <img class="header-logo" src="one-news-hub-192.png" alt="One News Hub logo" width="44" height="44">
+      <div class="brand">One <span>News</span> Hub</div>
+    </div>
     <div class="header-actions">
       <button class="btn theme-icon" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch theme">&#9790;</button>
       <div class="menu-wrap">
