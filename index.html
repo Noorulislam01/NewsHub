@@ -81,6 +81,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 main.filters-mode{display:none}
 @media(max-width:700px){header{position:sticky;top:0}.brand{font-size:1.35rem}.theme-icon{flex:0 0 44px}.filter-row{padding-top:0}.category-nav{top:62px}}
 footer.site-footer{max-width:none;margin-top:32px;padding:0;border-top:1px solid var(--line);background:var(--surface);color:var(--mute);font-size:.88rem}
+body.filters-open footer.site-footer{margin-top:auto}
 .footer-inner{max-width:1200px;margin:auto;padding:22px 16px;display:flex;align-items:center;gap:28px}
 .footer-logo{display:block;width:74px;height:74px;flex:0 0 74px;border-radius:17px;object-fit:cover;box-shadow:0 4px 12px rgba(20,25,35,.12)}
 .footer-copy{margin-right:auto;min-width:0;text-align:left}
@@ -762,7 +763,7 @@ function init(){
   applyTheme();initDD();updateSavedCount();
   $('#footerYear').textContent=new Date().getFullYear();
   $('#range').value=prefs.range;updCounts();
-  const setFilters=open=>{$('#tools').classList.toggle('hide',!open);$('#contentMain').classList.toggle('filters-mode',open)};
+  const setFilters=open=>{$('#tools').classList.toggle('hide',!open);$('#contentMain').classList.toggle('filters-mode',open);document.body.classList.toggle('filters-open',open)};
   const menuBtn=$('#menuBtn'),menu=$('#mainMenu');
   const closeMenu=()=>{menu.hidden=true;menuBtn.setAttribute('aria-expanded','false');menuBtn.setAttribute('aria-label','Open navigation menu')};
   menuBtn.onclick=()=>{
