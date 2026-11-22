@@ -83,10 +83,10 @@ main.filters-mode{display:none}
 footer.site-footer{max-width:none;margin-top:32px;padding:0;border-top:1px solid var(--line);background:var(--surface);color:var(--mute);font-size:.88rem}
 .footer-inner{max-width:1200px;margin:auto;padding:22px 16px;display:flex;align-items:center;gap:16px}
 .footer-logo{display:block;width:54px;height:54px;flex:0 0 54px;border-radius:14px;object-fit:cover;box-shadow:0 4px 12px rgba(20,25,35,.12)}
-.footer-copy{margin-left:auto;min-width:0;text-align:right}
+.footer-copy{margin-right:auto;min-width:0;text-align:left}
 .footer-tagline{margin:0;color:var(--ink);font-size:.95rem;font-weight:650;line-height:1.45}
-.footer-meta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 16px;margin-top:6px;color:var(--mute);font-size:.78rem;line-height:1.45}
-@media(max-width:520px){.footer-inner{padding:18px 16px;gap:12px}.footer-logo{width:46px;height:46px;flex-basis:46px;border-radius:12px}.footer-tagline{font-size:.88rem}.footer-meta{flex-direction:column;align-items:flex-end;gap:2px;font-size:.72rem}}
+.footer-meta{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px 16px;margin-top:6px;color:var(--mute);font-size:.78rem;line-height:1.45}
+@media(max-width:520px){.footer-inner{padding:18px 16px;gap:12px}.footer-logo{width:46px;height:46px;flex-basis:46px;border-radius:12px}.footer-tagline{font-size:.88rem}.footer-meta{flex-direction:column;align-items:flex-start;gap:2px;font-size:.72rem}}
 
 
 
@@ -327,7 +327,6 @@ footer.site-footer{max-width:none;margin-top:32px;padding:0;border-top:1px solid
 </main>
 <footer class="site-footer ui">
   <div class="footer-inner">
-    <img class="footer-logo" src="icon-192.png" alt="Dilshad News Hub logo" width="54" height="54">
     <div class="footer-copy">
       <p class="footer-tagline">A clearer view of the stories shaping today.</p>
       <div class="footer-meta">
@@ -335,6 +334,7 @@ footer.site-footer{max-width:none;margin-top:32px;padding:0;border-top:1px solid
         <span>Read every story at its original source.</span>
       </div>
     </div>
+    <img class="footer-logo" src="icon-192.png" alt="Dilshad News Hub logo" width="54" height="54">
   </div>
 </footer>
 
