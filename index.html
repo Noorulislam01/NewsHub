@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#c2410c">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="one-news-hub-192.png" type="image/png">
+<link rel="apple-touch-icon" href="one-news-hub-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>One News Hub</title>
@@ -95,13 +95,15 @@ body.filters-open footer.site-footer{margin-top:auto}
 .bar{position:relative;justify-content:space-between;min-height:64px}
 .brand{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  margin:0;text-align:center;white-space:nowrap;max-width:calc(100% - 120px);
+  margin:0;text-align:center;white-space:nowrap;max-width:calc(100% - 164px);
   overflow:hidden;text-overflow:ellipsis;pointer-events:none;
 }
 .theme-icon{margin-left:0;flex:0 0 44px}
+.header-logo{display:block;width:44px;height:44px;flex:0 0 44px;border-radius:12px;object-fit:cover}
+.header-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 @media(max-width:700px){
   .bar{min-height:62px}
-  .brand{font-size:clamp(.92rem,4.2vw,1.22rem);letter-spacing:-.035em;max-width:calc(100% - 108px)}
+  .brand{font-size:clamp(.92rem,4.2vw,1.22rem);letter-spacing:-.035em;max-width:calc(100% - 164px)}
 }
 
 
@@ -286,9 +288,11 @@ body.filters-open footer.site-footer{margin-top:auto}
 <body>
 <header class="ui" id="pageTop">
   <div class="bar">
-    <button class="btn theme-icon" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch theme">&#9790;</button>
+    <img class="header-logo" src="one-news-hub-192.png" alt="One News Hub logo" width="44" height="44">
     <div class="brand">One <span>News</span> Hub</div>
-    <div class="menu-wrap">
+    <div class="header-actions">
+      <button class="btn theme-icon" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch theme">&#9790;</button>
+      <div class="menu-wrap">
       <button class="btn menu-toggle" id="menuBtn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainMenu" title="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -299,6 +303,7 @@ body.filters-open footer.site-footer{margin-top:auto}
         <button type="button" data-menu-action="refresh"><span class="menu-symbol">↻</span>Refresh news</button>
         <button type="button" data-menu-action="install" id="installBtn" hidden><span class="menu-symbol">⬇</span>Install app</button>
       </nav>
+      </div>
     </div>
   </div>
   <div class="tools hide" id="tools">
@@ -335,7 +340,7 @@ body.filters-open footer.site-footer{margin-top:auto}
         <span>Read every story at its original source.</span>
       </div>
     </div>
-    <img class="footer-logo" src="icon-192.png" alt="One News Hub logo" width="74" height="74">
+    <img class="footer-logo" src="one-news-hub-192.png" alt="One News Hub logo" width="74" height="74">
   </div>
 </footer>
 
