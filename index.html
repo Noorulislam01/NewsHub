@@ -315,9 +315,14 @@ const SOURCES=[
  {id:'bhaskar',name:'Dainik Bhaskar',feeds:['https://www.bhaskar.com/rss-v1--category-1061.xml']},
  {id:'abp',name:'ABP News',feeds:['https://news.abplive.com/home/feed']},
  {id:'orf',name:'Observer Research Foundation',searchHost:'orfonline.org',feeds:['https://www.orfonline.org/feed/']},
- {id:'cfr',name:'Council on Foreign Relations',feeds:['https://www.cfr.org/feed']}
+ {id:'cfr',name:'Council on Foreign Relations',feeds:['https://www.cfr.org/feed']},
+ {id:'techcrunch',name:'TechCrunch',feeds:['https://techcrunch.com/feed/']},
+ {id:'verge',name:'The Verge',feeds:['https://www.theverge.com/rss/index.xml']},
+ {id:'wired',name:'WIRED',feeds:['https://www.wired.com/feed/rss']},
+ {id:'mittr',name:'MIT Technology Review',feeds:['https://www.technologyreview.com/feed/']},
+ {id:'ars',name:'Ars Technica',searchHost:'arstechnica.com',feeds:['https://feeds.arstechnica.com/arstechnica/index']}
 ];
-const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr'];
+const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars'];
 const CATS=['All News','Politics','National','International','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
 /* Keyword rules use word boundaries to limit false positives. Title matches are used; RSS category tags are added to the text. */
 const RULES={
