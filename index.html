@@ -40,6 +40,13 @@ header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:
 main{max-width:1200px;margin:auto;padding:16px}
 .stats{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:.9rem;margin-bottom:12px}
 .stats b{color:var(--ink)}
+.category-nav{position:sticky;top:64px;z-index:10;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px 12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.category-nav::-webkit-scrollbar{display:none}
+.category-nav[hidden]{display:none}
+.category-pill{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:var(--surface);color:var(--mute);font:600 .84rem system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease}
+.category-pill:hover{border-color:var(--accent);color:var(--accent)}
+.category-pill[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.category-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .notes{display:grid;gap:6px;margin-bottom:12px}
 .note{padding:8px 12px;border-radius:8px;font-size:.88rem;background:var(--chip);border-left:4px solid var(--err)}
 .note.info{border-color:var(--mute)}
@@ -72,7 +79,7 @@ main{max-width:1200px;margin:auto;padding:16px}
 @media (prefers-reduced-motion:reduce){.skel{animation:none}}
 .tools.hide{display:none}
 main.filters-mode{display:none}
-@media(max-width:700px){header{position:sticky;top:0}.brand{font-size:1.35rem}.theme-icon{flex:0 0 44px}.filter-row{padding-top:0}}
+@media(max-width:700px){header{position:sticky;top:0}.brand{font-size:1.35rem}.theme-icon{flex:0 0 44px}.filter-row{padding-top:0}.category-nav{top:62px}}
 footer{max-width:1200px;margin:auto;padding:16px;color:var(--mute);font-size:.8rem}
 
 
@@ -266,6 +273,7 @@ footer{max-width:1200px;margin:auto;padding:16px;color:var(--mute);font-size:.8r
     <span>Feeds loaded: <b id="sOk">0</b></span>
     <span>Last updated: <b id="sTime">never</b></span>
   </div>
+  <nav class="category-nav ui" id="categoryNav" aria-label="Browse news categories" hidden></nav>
   <div class="notes ui" id="notes"></div>
   <div class="grid" id="grid"></div>
 </main>
@@ -359,7 +367,7 @@ const prefs={
   theme:['dark','light'].includes(savedPrefs.theme)?savedPrefs.theme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')
 };
 if(!prefs.cats.length)prefs.cats=['All News'];
-let articles=[],loadId=0,feedStats={ok:0},lastUpdated=null;
+let articles=[],loadId=0,feedStats={ok:0},lastUpdated=null,activeCategory=null;
 let savedArticles=LS.get('dnh_saved_articles',[]);if(!Array.isArray(savedArticles))savedArticles=[];
 let showingSaved=false;
 const $=s=>document.querySelector(s);
@@ -527,15 +535,36 @@ function toggleSavedArticle(a){
   if(showingSaved)render(group(savedArticles));
   else view();
 }
+function updateCategoryNav(){
+  const nav=$('#categoryNav');
+  if(!nav)return;
+  if(showingSaved){nav.hidden=true;nav.innerHTML='';return}
+  const selected=prefs.cats.filter(c=>c!=='All News');
+  let categories=selected;
+  if(!selected.length){
+    const hrs=prefs.range==='latest'?0:+prefs.range,now=Date.now(),available=new Set();
+    articles.filter(a=>prefs.papers.includes(a.pid)&&(!hrs||(a.date&&now-a.date<=hrs*36e5)))
+      .forEach(a=>a.cats.forEach(c=>{if(CATS.includes(c)&&c!=='All News')available.add(c)}));
+    categories=CATS.filter(c=>available.has(c));
+  }
+  const resetLabel=selected.length?'All selected':'All News';
+  const showReset=!selected.length||selected.length>1;
+  const buttons=[...(showReset?[{label:resetLabel,value:'',active:activeCategory===null}]:[]),
+    ...categories.map(c=>({label:c,value:c,active:activeCategory===c||(!activeCategory&&selected.length===1)}))];
+  nav.hidden=!buttons.length;
+  nav.innerHTML=buttons.map(b=>`<button class="category-pill" type="button" data-category-nav="${esc(b.value)}" aria-pressed="${b.active}">${esc(b.label)}</button>`).join('');
+}
 function view(){
   if(showingSaved){render(group(savedArticles));return;}
   const q=$('#q').value.trim().toLowerCase(),cats=prefs.cats.filter(c=>c!=='All News');
   const hrs=prefs.range==='latest'?0:+prefs.range,now=Date.now();
   let list=articles.filter(a=>prefs.papers.includes(a.pid));
   if(cats.length)list=list.filter(a=>a.cats.some(c=>cats.includes(c)));
+  if(activeCategory)list=list.filter(a=>a.cats.includes(activeCategory));
   if(hrs)list=list.filter(a=>a.date&&now-a.date<=hrs*36e5);
   if(q)list=list.filter(a=>(a.title+' '+a.summary).toLowerCase().includes(q));
   list.sort((x,y)=>(y.date||0)-(x.date||0));
+  updateCategoryNav();
   render(group(list));
 }
 /* ---------- AI summaries (via serverless function) ---------- */
@@ -583,6 +612,7 @@ async function toggleSummary(a){
 }
 const fmt=d=>d?new Date(d).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Date unavailable';
 function render(groups){
+  if(showingSaved)updateCategoryNav();
   const g=$('#grid');
   $('#sArt').textContent=groups.length;
   if(showingSaved)$('#sArt').textContent=savedArticles.length;
@@ -700,15 +730,22 @@ function init(){
       deferredInstall.userChoice.finally(()=>{deferredInstall=null;$('#installBtn').hidden=true});
     }
   });
+  $('#categoryNav').addEventListener('click',e=>{
+    const button=e.target.closest('[data-category-nav]');
+    if(!button)return;
+    activeCategory=button.dataset.categoryNav||null;
+    view();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
   document.addEventListener('click',e=>{if(!e.target.closest('.menu-wrap'))closeMenu();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();menuBtn.focus();}});
   setFilters(false); // Start on the news home; filters open only from the hamburger menu.
-  $('#showBtn').onclick=()=>{prefs.range=$('#range').value;savePrefs();setFilters(false);load(false);window.scrollTo({top:0,behavior:'smooth'});};
+  $('#showBtn').onclick=()=>{prefs.range=$('#range').value;activeCategory=null;savePrefs();setFilters(false);load(false);window.scrollTo({top:0,behavior:'smooth'});};
   $('#refreshBtn').onclick=()=>load(true);
   $('#allBtn').onclick=()=>{prefs.papers=SOURCES.map(s=>s.id);drawP();savePrefs();updCounts()};
-  $('#clearBtn').onclick=()=>{prefs.papers=DEFAULT_PAPERS;prefs.cats=['All News'];prefs.range='latest';$('#range').value='latest';$('#q').value='';drawP();drawC();savePrefs();load(false)};
+  $('#clearBtn').onclick=()=>{prefs.papers=DEFAULT_PAPERS;prefs.cats=['All News'];prefs.range='latest';activeCategory=null;$('#range').value='latest';$('#q').value='';drawP();drawC();savePrefs();load(false)};
   $('#themeBtn').onclick=()=>{prefs.theme=prefs.theme==='dark'?'light':'dark';applyTheme();savePrefs()};
-  $('#range').onchange=()=>{prefs.range=$('#range').value;savePrefs();load(false)};
+  $('#range').onchange=()=>{prefs.range=$('#range').value;activeCategory=null;savePrefs();load(false)};
   let t;$('#q').oninput=()=>{clearTimeout(t);t=setTimeout(view,200)};
   addEventListener('online',()=>load(true));
   addEventListener('offline',()=>note('You are offline. Showing last loaded results.',true));
