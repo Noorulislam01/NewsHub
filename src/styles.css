@@ -2,13 +2,16 @@
 :root[data-theme=dark]{--bg:#12151c;--surface:#1b2029;--ink:#eceef3;--mute:#9aa3b5;--line:#2a313d;--accent:#fb923c;--accent-ink:#1a1206;--chip:#262d39;--ok:#4ade80;--err:#f87171}
 *{box-sizing:border-box}
 body{min-height:100vh;margin:0;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif}
+#root{min-height:100vh;display:flex;flex:1;flex-direction:column}
 button,input,select{font:inherit;color:inherit}
 .ui{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar{max-width:1200px;margin:auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:nowrap}
 .filter-row{max-width:1200px;margin:auto;padding:0 16px 10px;display:flex;align-items:center}
-.theme-icon{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:1.55rem;line-height:1;border-radius:50%;margin-left:auto;transition:transform .14s ease,background-color .18s ease,border-color .18s ease}
-.theme-icon:active{transform:scale(.9)}
+.theme-icon{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:1.55rem;line-height:1;border-radius:50%;margin-left:auto;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.theme-icon:hover{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}
+.theme-icon:active{background:var(--chip);border-color:var(--accent);transform:scale(.9)}
+.theme-icon:focus-visible{border-color:var(--accent)}
 .theme-symbol{display:block;animation:themeGlyphChange .28s cubic-bezier(.2,.75,.25,1) both}
 @keyframes themeGlyphChange{from{opacity:0;transform:rotate(-80deg) scale(.55)}to{opacity:1;transform:rotate(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.theme-icon,.theme-symbol{transition:none;animation:none}}
