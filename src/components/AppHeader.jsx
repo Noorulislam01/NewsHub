@@ -44,7 +44,9 @@ export default function AppHeader({ theme, savedCount, installAvailable, onTheme
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             onClick={() => onThemeChange(theme === 'dark' ? 'light' : 'dark')}
           >
-            {theme === 'dark' ? '☀' : '☾'}
+            <span className="theme-symbol" key={theme} aria-hidden="true">
+              {theme === 'dark' ? '☀' : '☾'}
+            </span>
           </button>
           <div className="menu-wrap" ref={menuRoot}>
             <button

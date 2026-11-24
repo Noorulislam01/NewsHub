@@ -7,7 +7,11 @@ button,input,select{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar{max-width:1200px;margin:auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:nowrap}
 .filter-row{max-width:1200px;margin:auto;padding:0 16px 10px;display:flex;align-items:center}
-.theme-icon{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:1.55rem;line-height:1;border-radius:50%;margin-left:auto}
+.theme-icon{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:1.55rem;line-height:1;border-radius:50%;margin-left:auto;transition:transform .14s ease,background-color .18s ease,border-color .18s ease}
+.theme-icon:active{transform:scale(.9)}
+.theme-symbol{display:block;animation:themeGlyphChange .28s cubic-bezier(.2,.75,.25,1) both}
+@keyframes themeGlyphChange{from{opacity:0;transform:rotate(-80deg) scale(.55)}to{opacity:1;transform:rotate(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.theme-icon,.theme-symbol{transition:none;animation:none}}
 
 .brand{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-right:auto}
 .brand span{color:var(--accent)}
