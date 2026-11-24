@@ -6,6 +6,21 @@
     <meta name="theme-color" content="#c2410c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <script>
+      (() => {
+        const systemTheme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        let theme = systemTheme;
+        try {
+          const storedTheme = JSON.parse(localStorage.getItem('inh_prefs') || '{}')?.theme;
+          if (storedTheme === 'dark' || storedTheme === 'light') theme = storedTheme;
+        } catch {}
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <style>
+      html { background: #f6f5f2; }
+      html[data-theme='dark'] { background: #12151c; }
+    </style>
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/one-news-hub-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="/one-news-hub-192.png" />
