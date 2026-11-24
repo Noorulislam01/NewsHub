@@ -45,7 +45,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .category-nav{min-width:0;flex:1;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 0}
 .category-nav::-webkit-scrollbar{display:none}
 .category-nav[hidden]{display:none}
-.refresh-icon{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:15;width:46px;height:46px;display:grid;place-items:center;padding:0;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:50%;background:var(--surface);color:var(--accent);cursor:pointer;box-shadow:0 4px 14px rgba(20,25,35,.18);transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.refresh-icon{position:fixed;right:calc(28px + env(safe-area-inset-right,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));z-index:15;width:46px;height:46px;display:grid;place-items:center;padding:0;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:50%;background:var(--surface);color:var(--accent);cursor:pointer;box-shadow:0 4px 14px rgba(20,25,35,.18);transition:background .15s ease,border-color .15s ease,transform .15s ease}
 .refresh-icon svg{width:22px;height:22px;display:block}
 .refresh-icon:hover{border-color:var(--accent);background:var(--chip);transform:scale(1.06)}
 .refresh-icon:active{transform:scale(.94)}
@@ -53,7 +53,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .refresh-icon.is-refreshing svg{animation:refreshSpin .8s linear infinite}
 .refresh-icon:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @keyframes refreshSpin{to{transform:rotate(360deg)}}
-@media(max-width:700px){.refresh-icon{right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:52px;height:52px}.refresh-icon svg{width:25px;height:25px}}
+@media(max-width:700px){.refresh-icon{right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));width:52px;height:52px}.refresh-icon svg{width:25px;height:25px}}
 @media(prefers-reduced-motion:reduce){.refresh-icon,.refresh-icon svg{transition:none;animation:none!important}}
 .category-pill{flex:0 0 auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:var(--chip);color:var(--ink);font:600 .86rem system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease}
 .category-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
@@ -413,11 +413,13 @@ const SOURCES=[
  {id:'ars',name:'Ars Technica',searchHost:'arstechnica.com',feeds:['https://feeds.arstechnica.com/arstechnica/index']}
 ];
 const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars'];
-const CATS=['All News','Politics','National','International','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
+const CATS=['All News','Politics','National','International','Opinion','Explained','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
 /* Keyword rules use word boundaries. Publisher section labels take priority when they map to an app category. */
 const RULES={
  'Politics':/\b(bjp|congress|aap|tmc|lok sabha|rajya sabha|election|poll|mla|mp|minister|chief minister|opposition|parliament|assembly|party)\b/i,
  'International':/\b(us|u\.s\.|china|pakistan|russia|ukraine|gaza|israel|trump|biden|un|nato|world|britain|uk|europe|iran|bangladesh|nepal|sri lanka)\b/i,
+ 'Opinion':/\b(opinion|editorial|op-?ed|commentary|columns?|viewpoint|perspective)\b/i,
+ 'Explained':/\b(explained|explainers?)\b/i,
  'Business':/\b(sensex|nifty|stock|shares|market|company|ipo|profit|revenue|bank|rbi|rupee|earnings|merger|business)\b/i,
  'Economy':/\b(gdp|inflation|economy|fiscal|budget|gst|tax|trade deficit|exports|imports|repo rate|economic)\b/i,
  'Technology':/\b(tech|smartphone|iphone|android|google|apple|microsoft|software|app|5g|cyber|semiconductor|gadget)\b/i,
@@ -595,6 +597,8 @@ function classify(a){
     'National':['india','indian','domestic','nation'],
     'International':['world','global','foreign affairs','overseas'],
     'Politics':['political'],
+    'Opinion':['editorial','op-ed','op ed','commentary','column','columns','viewpoint','perspective'],
+    'Explained':['explainer','explainers'],
     'Business':['business news','finance','financial'],
     'Economy':['economic','economics'],
     'Technology':['tech','gadgets'],
