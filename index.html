@@ -410,9 +410,15 @@ const SOURCES=[
  {id:'verge',name:'The Verge',feeds:['https://www.theverge.com/rss/index.xml']},
  {id:'wired',name:'WIRED',feeds:['https://www.wired.com/feed/rss']},
  {id:'mittr',name:'MIT Technology Review',feeds:['https://www.technologyreview.com/feed/']},
- {id:'ars',name:'Ars Technica',searchHost:'arstechnica.com',feeds:['https://feeds.arstechnica.com/arstechnica/index']}
+ {id:'ars',name:'Ars Technica',searchHost:'arstechnica.com',feeds:['https://feeds.arstechnica.com/arstechnica/index']},
+ {id:'sciencedaily',name:'ScienceDaily',searchHost:'sciencedaily.com',feeds:['https://www.sciencedaily.com/rss/all.xml']},
+ {id:'medicalxpress',name:'Medical Xpress',searchHost:'medicalxpress.com',feeds:['https://medicalxpress.com/rss-feed/']},
+ {id:'stat',name:'STAT',searchHost:'statnews.com',feeds:['https://www.statnews.com/feed/','https://www.statnews.com/category/health-tech/feed']},
+ {id:'thescientist',name:'The Scientist',searchHost:'the-scientist.com',feeds:['https://www.the-scientist.com/atom/latest']},
+ {id:'nature',name:'Nature News',searchHost:'nature.com',feeds:['https://www.nature.com/nature.rss']}
 ];
-const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars'];
+const NEW_RESEARCH_SOURCE_IDS=['sciencedaily','medicalxpress','stat','thescientist','nature'];
+const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars',...NEW_RESEARCH_SOURCE_IDS];
 const CATS=['All News','Politics','National','International','Opinion','Explained','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
 /* Keyword rules use word boundaries. Publisher section labels take priority when they map to an app category. */
 const RULES={
@@ -444,8 +450,16 @@ const NATIONAL=/\b(india|indian|delhi|mumbai|kolkata|chennai|bengaluru|hyderabad
 /* ---------- STATE ---------- */
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const savedPrefs=LS.get('inh_prefs',null)||{};
+const savedPapers=Array.isArray(savedPrefs.papers)?savedPrefs.papers.filter(id=>SOURCES.some(s=>s.id===id)):DEFAULT_PAPERS.slice();
+if(!LS.get('inh_research_sources_added_v1',false)){
+  if(Array.isArray(savedPrefs.papers)){
+    for(const id of NEW_RESEARCH_SOURCE_IDS)if(!savedPapers.includes(id))savedPapers.push(id);
+    LS.set('inh_prefs',{...savedPrefs,papers:savedPapers});
+  }
+  LS.set('inh_research_sources_added_v1',true);
+}
 const prefs={
-  papers:Array.isArray(savedPrefs.papers)?savedPrefs.papers.filter(id=>SOURCES.some(s=>s.id===id)):DEFAULT_PAPERS.slice(),
+  papers:savedPapers,
   cats:Array.isArray(savedPrefs.cats)?savedPrefs.cats.filter(c=>CATS.includes(c)):['All News'],
   range:['latest','24','48','168'].includes(String(savedPrefs.range))?String(savedPrefs.range):'latest',
   theme:['dark','light'].includes(savedPrefs.theme)?savedPrefs.theme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')
