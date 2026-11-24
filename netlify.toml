@@ -3,7 +3,7 @@
   publish = "dist"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "adapters/netlify"
 
 [[redirects]]
   from = "/api/summarize"

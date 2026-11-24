@@ -19,7 +19,7 @@ This starts the Vite UI preview at `http://localhost:5173`. The summary API is a
 npm run build
 ```
 
-Vite writes the deployable site to `dist/`. The Vercel configuration uses that directory and keeps the summary function in `api/`. Netlify builds the same Vite output and continues to expose its summary adapter.
+Vite writes the deployable site to `dist/`. The Vercel configuration uses that directory and keeps the summary function in `api/`. The thin Netlify adapter lives in `adapters/netlify/` and calls the same shared summary handler.
 
 ## Deploying
 
