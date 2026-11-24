@@ -2,16 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function AppHeader({ theme, savedCount, authUser, installAvailable, onThemeChange, onNavigate, onInstall, onSignOut, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountExpanded, setAccountExpanded] = useState(false);
   const menuRoot = useRef(null);
   const menuButton = useRef(null);
 
   useEffect(() => {
     function closeOutside(event) {
-      if (menuRoot.current && !menuRoot.current.contains(event.target)) setMenuOpen(false);
+      if (menuRoot.current && !menuRoot.current.contains(event.target)) {
+        setMenuOpen(false);
+        setAccountExpanded(false);
+      }
     }
     function closeOnEscape(event) {
       if (event.key === 'Escape' && menuOpen) {
         setMenuOpen(false);
+        setAccountExpanded(false);
         menuButton.current?.focus();
       }
     }
@@ -25,6 +30,7 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
 
   function selectMenuAction(action) {
     setMenuOpen(false);
+    setAccountExpanded(false);
     if (action === 'install') onInstall();
     else if (action === 'signout') onSignOut();
     else onNavigate(action);
@@ -58,23 +64,45 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
               aria-expanded={menuOpen}
               aria-controls="mainMenu"
               title="Menu"
-              onClick={() => setMenuOpen(open => !open)}
+              onClick={() => setMenuOpen(open => {
+                if (open) setAccountExpanded(false);
+                return !open;
+              })}
             >
               <span /><span /><span />
             </button>
             <nav className="menu-panel" id="mainMenu" aria-label="Main menu" hidden={!menuOpen}>
-              <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">⌂</span>Home</button>
-              <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">☷</span>Filters</button>
-              {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">⬇</span>Install app</button>}
               {authUser ? (
                 <>
-                  <div className="menu-account" title={authUser.email || 'Signed-in account'}>{authUser.email || 'Signed in'}</div>
-                  <button type="button" onClick={() => selectMenuAction('signout')}><span className="menu-symbol">↪</span>Sign out</button>
+                  <button
+                    type="button"
+                    className="menu-account-button"
+                    aria-expanded={accountExpanded}
+                    aria-controls="menuAccountEmail"
+                    onClick={() => setAccountExpanded(expanded => !expanded)}
+                  >
+                    <svg className="menu-user-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <circle cx="12" cy="8" r="3.5" />
+                      <path d="M5 20c.5-3.6 3.2-5.5 7-5.5s6.5 1.9 7 5.5" />
+                    </svg>
+                    Account
+                  </button>
+                  {accountExpanded && <div className="menu-account" id="menuAccountEmail" role="status">{authUser.email || 'Signed in'}</div>}
+                  <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
                 </>
               ) : (
-                <button type="button" onClick={() => selectMenuAction('account')}><span className="menu-symbol">♙</span>Sign in / Sign up</button>
+                <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
               )}
-              <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">★</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
+              <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">&#x2637;</span>Filters</button>
+              {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">&#x2B07;</span>Install app</button>}
+              {authUser ? (
+                <>
+                  <button type="button" onClick={() => selectMenuAction('signout')}><span className="menu-symbol">&#x21AA;</span>Sign out</button>
+                  <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">&#x2605;</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
+                </>
+              ) : (
+                <button type="button" onClick={() => selectMenuAction('account')}><span className="menu-symbol">&#x2659;</span>Sign in / Sign up</button>
+              )}
             </nav>
           </div>
         </div>

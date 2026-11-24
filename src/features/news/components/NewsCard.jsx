@@ -28,7 +28,7 @@ function RelatedPublishers({ articles }) {
   );
 }
 
-export default function NewsCard({ article, otherCoverage, saved, onSave }) {
+export default function NewsCard({ article, otherCoverage, saved, canSave = false, onSave }) {
   const [imageFailed, setImageFailed] = useState(false);
 
   function openArticle(event) {
@@ -61,10 +61,12 @@ export default function NewsCard({ article, otherCoverage, saved, onSave }) {
         <h2>{article.title}</h2>
         {article.summary && <p>{article.summary}</p>}
         {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} />}
-        <div className="card-actions ui">
-          <button className={`save-article${saved ? ' is-saved' : ''}`} type="button" onClick={() => onSave(article)} aria-pressed={saved}>
-            {saved ? '★ Saved' : '☆ Save'}
-          </button>
+        <div className={`card-actions ui${canSave ? '' : ' summary-only'}`}>
+          {canSave && (
+            <button className={`save-article${saved ? ' is-saved' : ''}`} type="button" onClick={() => onSave(article)} aria-pressed={saved}>
+              {saved ? '\u2605 Saved' : '\u2606 Save'}
+            </button>
+          )}
           <ArticleSummary article={article} />
         </div>
       </div>

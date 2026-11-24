@@ -97,7 +97,7 @@ export default function App() {
       feed.setShowingSaved(false);
     } else if (action === 'filters') {
       setFiltersOpen(true);
-    } else if (action === 'saved') {
+    } else if (action === 'saved' && auth.user) {
       setSearch('');
       setFiltersOpen(false);
       feed.setShowingSaved(true);
@@ -134,6 +134,7 @@ export default function App() {
   async function signOut() {
     try {
       await auth.signOut();
+      feed.setShowingSaved(false);
     } catch (error) {
       console.error('Could not sign out:', error?.message || error);
     }
@@ -200,7 +201,8 @@ export default function App() {
             totalArticles={feed.totalArticles}
             loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}
-            onSave={library.saveArticle}
+            canSave={Boolean(auth.user)}
+            onSave={auth.user ? library.saveArticle : undefined}
           />
         </div>
       </main>

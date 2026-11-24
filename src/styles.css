@@ -121,6 +121,7 @@ body.filters-open footer.site-footer{margin-top:auto}
 
 /* Saved article controls */
 .card-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
+.card-actions.summary-only{justify-content:flex-end}
 .card-actions .read{margin-top:0}
 .summary-control{display:contents}
 .card-actions .sum-box{flex:1 0 100%;width:100%;min-width:0}
@@ -166,6 +167,8 @@ body.filters-open footer.site-footer{margin-top:auto}
 .menu-panel button:hover,.menu-panel button:focus-visible{background:var(--chip);color:var(--accent);outline:none}
 .menu-symbol{width:22px;text-align:center;font-size:1.15rem;color:var(--accent)}
 .menu-account{overflow:hidden;padding:8px 10px;border-bottom:1px solid var(--line);color:var(--mute);font-size:.8rem;text-overflow:ellipsis;white-space:nowrap}
+.menu-account-button[aria-expanded="true"]{background:var(--chip);color:var(--accent)}
+.menu-user-icon{width:22px;height:22px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @keyframes menuIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){
   .bar{gap:9px}

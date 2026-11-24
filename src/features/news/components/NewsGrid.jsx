@@ -1,7 +1,7 @@
 import NewsCard from './NewsCard.jsx';
 import { articleKey } from '../../../shared/storage.js';
 
-export default function NewsGrid({ groups, showingSaved, totalArticles, loading, savedArticles, onSave }) {
+export default function NewsGrid({ groups, showingSaved, totalArticles, loading, savedArticles, canSave, onSave }) {
   if (loading && groups.length === 0) {
     return <>{Array.from({ length: 6 }, (_, index) => <div className="skel" key={index} />)}</>;
   }
@@ -21,6 +21,7 @@ export default function NewsGrid({ groups, showingSaved, totalArticles, loading,
       article={main}
       otherCoverage={others}
       saved={savedKeys.has(articleKey(main))}
+      canSave={canSave}
       onSave={onSave}
     />
   ));
