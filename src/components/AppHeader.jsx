@@ -72,37 +72,27 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
               <span /><span /><span />
             </button>
             <nav className="menu-panel" id="mainMenu" aria-label="Main menu" hidden={!menuOpen}>
-              {authUser ? (
-                <>
-                  <button
-                    type="button"
-                    className="menu-account-button"
-                    aria-expanded={accountExpanded}
-                    aria-controls="menuAccountEmail"
-                    onClick={() => setAccountExpanded(expanded => !expanded)}
-                  >
-                    <svg className="menu-user-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <circle cx="12" cy="8" r="3.5" />
-                      <path d="M5 20c.5-3.6 3.2-5.5 7-5.5s6.5 1.9 7 5.5" />
-                    </svg>
-                    Account
-                  </button>
-                  {accountExpanded && <div className="menu-account" id="menuAccountEmail" role="status">{authUser.email || 'Signed in'}</div>}
-                  <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
-                </>
-              ) : (
-                <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
-              )}
+              <button
+                type="button"
+                className="menu-account-button"
+                aria-expanded={Boolean(authUser && accountExpanded)}
+                aria-controls="menuAccountEmail"
+                onClick={() => authUser
+                  ? setAccountExpanded(expanded => !expanded)
+                  : selectMenuAction('account')}
+              >
+                <svg className="menu-user-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5 20c.5-3.6 3.2-5.5 7-5.5s6.5 1.9 7 5.5" />
+                </svg>
+                Account
+              </button>
+              {authUser && accountExpanded && <div className="menu-account" id="menuAccountEmail" role="status">{authUser.email || 'Signed in'}</div>}
+              <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
               <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">&#x2637;</span>Filters</button>
               {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">&#x2B07;</span>Install app</button>}
-              {authUser ? (
-                <>
-                  <button type="button" onClick={() => selectMenuAction('signout')}><span className="menu-symbol">&#x21AA;</span>Sign out</button>
-                  <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">&#x2605;</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
-                </>
-              ) : (
-                <button type="button" onClick={() => selectMenuAction('account')}><span className="menu-symbol">&#x2659;</span>Sign in / Sign up</button>
-              )}
+              {authUser && <button type="button" onClick={() => selectMenuAction('signout')}><span className="menu-symbol">&#x21AA;</span>Sign out</button>}
+              <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">&#x2605;</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
             </nav>
           </div>
         </div>

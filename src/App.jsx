@@ -18,6 +18,7 @@ export default function App() {
   const [installAvailable, setInstallAvailable] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState('signin');
+  const [authDialogPrompt, setAuthDialogPrompt] = useState('');
   const installPrompt = useRef(null);
   const auth = useAuth();
   const library = useSavedArticles(auth);
@@ -26,6 +27,7 @@ export default function App() {
 
   const closeAuthDialog = useCallback(() => {
     setAuthDialogOpen(false);
+    setAuthDialogPrompt('');
     auth.clearPasswordRecovery();
   }, [auth.clearPasswordRecovery]);
 
@@ -91,6 +93,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function requireLogin(message = '') {
+    setAuthDialogMode('signin');
+    setAuthDialogPrompt(message);
+    setAuthDialogOpen(true);
+  }
+
   function navigate(action) {
     if (action === 'home') {
       setFiltersOpen(false);
@@ -101,9 +109,10 @@ export default function App() {
       setSearch('');
       setFiltersOpen(false);
       feed.setShowingSaved(true);
+    } else if (action === 'saved') {
+      requireLogin('Sign in to view your saved articles.');
     } else if (action === 'account') {
-      setAuthDialogMode('signin');
-      setAuthDialogOpen(true);
+      requireLogin();
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -203,6 +212,7 @@ export default function App() {
             savedArticles={savedArticles}
             canSave={Boolean(auth.user)}
             onSave={auth.user ? library.saveArticle : undefined}
+            onRequireLogin={requireLogin}
           />
         </div>
       </main>
@@ -223,6 +233,7 @@ export default function App() {
         open={authDialogOpen}
         initialMode={authDialogMode}
         configured={auth.configured}
+        promptMessage={authDialogPrompt}
         onClose={closeAuthDialog}
         onSignIn={auth.signIn}
         onSignUp={auth.signUp}

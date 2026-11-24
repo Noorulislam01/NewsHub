@@ -11,6 +11,7 @@ export default function AuthDialog({
   open,
   initialMode = 'signin',
   configured,
+  promptMessage,
   onClose,
   onSignIn,
   onSignUp,
@@ -108,6 +109,7 @@ export default function AuthDialog({
         <h2 id="authTitle">{TITLES[mode]}</h2>
         <p className="auth-intro">Sign in or create a One News Hub account. You can continue reading news without signing in.</p>
 
+        {promptMessage && <div className="auth-setup-note" role="status">{promptMessage}</div>}
         {!configured && <div className="auth-setup-note">Supabase is not connected yet. Add the project URL and publishable key to the app environment to enable account actions.</div>}
 
         <form onSubmit={submit}>

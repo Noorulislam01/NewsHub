@@ -28,7 +28,7 @@ function RelatedPublishers({ articles }) {
   );
 }
 
-export default function NewsCard({ article, otherCoverage, saved, canSave = false, onSave }) {
+export default function NewsCard({ article, otherCoverage, saved, canSave, onSave, onRequireLogin }) {
   const [imageFailed, setImageFailed] = useState(false);
 
   function openArticle(event) {
@@ -61,13 +61,11 @@ export default function NewsCard({ article, otherCoverage, saved, canSave = fals
         <h2>{article.title}</h2>
         {article.summary && <p>{article.summary}</p>}
         {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} />}
-        <div className={`card-actions ui${canSave ? '' : ' summary-only'}`}>
-          {canSave && (
-            <button className={`save-article${saved ? ' is-saved' : ''}`} type="button" onClick={() => onSave(article)} aria-pressed={saved}>
-              {saved ? '\u2605 Saved' : '\u2606 Save'}
-            </button>
-          )}
-          <ArticleSummary article={article} />
+        <div className="card-actions ui">
+          <button className={`save-article${canSave && saved ? ' is-saved' : ''}`} type="button" onClick={() => canSave ? onSave?.(article) : onRequireLogin?.('Sign in to save this article.') } aria-pressed={Boolean(canSave && saved)}>
+            {canSave && saved ? '\u2605 Saved' : '\u2606 Save'}
+          </button>
+          <ArticleSummary article={article} canSummarize={canSave} onRequireLogin={onRequireLogin} />
         </div>
       </div>
     </article>

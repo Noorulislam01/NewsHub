@@ -10,11 +10,15 @@ function readCachedSummary(key) {
     : { status: 'idle', text: '', basis: '' };
 }
 
-export default function ArticleSummary({ article }) {
+export default function ArticleSummary({ article, canSummarize, onRequireLogin }) {
   const [summary, setSummary] = useState(() => readCachedSummary(articleKey(article)));
   const [open, setOpen] = useState(false);
 
   async function handleToggle() {
+    if (!canSummarize) {
+      onRequireLogin?.('Sign in to summarize this article.');
+      return;
+    }
     if (summary.status === 'loading') return;
     if (summary.status === 'done') {
       setOpen(current => !current);
