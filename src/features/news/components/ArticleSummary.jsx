@@ -16,13 +16,11 @@ export default function ArticleSummary({ article }) {
 
   async function handleToggle() {
     if (summary.status === 'loading') return;
-    if (open) {
-      setOpen(false);
+    if (summary.status === 'done') {
+      setOpen(current => !current);
       return;
     }
     setOpen(true);
-    if (summary.status === 'done') return;
-
     setSummary({ status: 'loading', text: '', basis: '' });
     try {
       const response = await fetch(SUMMARY_ENDPOINT, {
@@ -50,7 +48,7 @@ export default function ArticleSummary({ article }) {
   return (
     <div className="summary-control">
       <button className="sum-btn" type="button" onClick={handleToggle} aria-expanded={open}>
-        {summary.status === 'loading' ? '⏳ Summarizing…' : (open ? '✕ Hide summary' : '✨ Summary')}
+        {summary.status === 'loading' ? 'Summarizing...' : summary.status === 'error' ? 'Retry summary' : (open ? 'Hide summary' : 'Summary')}
       </button>
       {open && (
         <div className="sum-box ui" aria-live="polite">

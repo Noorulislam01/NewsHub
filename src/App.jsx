@@ -1,22 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import NewsGrid from './features/news/components/NewsGrid.jsx';
 import FilterPanel from './features/preferences/FilterPanel.jsx';
 import AppHeader from './components/AppHeader.jsx';
 import RefreshButton from './components/RefreshButton.jsx';
 import { loadPreferences, savePreferences } from './features/preferences/preferences.js';
 import { CATEGORIES, DEFAULT_PAPERS, SOURCES } from './features/news/newsSources.js';
-import { loadSavedArticles } from './shared/storage.js';
+import { useSavedArticles } from './features/library/useSavedArticles.js';
 import { useNewsFeed } from './features/news/useNewsFeed.js';
+import AuthDialog from './features/auth/components/AuthDialog.jsx';
+import { useAuth } from './features/auth/AuthProvider.jsx';
 
 /** React owns the application UI and news feed lifecycle. */
 export default function App() {
-  const [savedArticles, setSavedArticles] = useState(loadSavedArticles);
   const [preferences, setPreferences] = useState(loadPreferences);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [installAvailable, setInstallAvailable] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogMode, setAuthDialogMode] = useState('signin');
   const installPrompt = useRef(null);
+  const auth = useAuth();
+  const library = useSavedArticles(auth);
+  const { savedArticles } = library;
   const feed = useNewsFeed(preferences, search, savedArticles);
+
+  const closeAuthDialog = useCallback(() => {
+    setAuthDialogOpen(false);
+    auth.clearPasswordRecovery();
+  }, [auth.clearPasswordRecovery]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = preferences.theme;
@@ -27,6 +38,13 @@ export default function App() {
     document.body.classList.toggle('filters-open', filtersOpen);
     return () => document.body.classList.remove('filters-open');
   }, [filtersOpen]);
+
+  useEffect(() => {
+    if (!auth.passwordRecovery) return;
+    setAuthDialogMode('recovery');
+    setAuthDialogOpen(true);
+    auth.clearPasswordRecovery();
+  }, [auth.passwordRecovery, auth.clearPasswordRecovery]);
 
   useEffect(() => {
     const onBeforeInstall = event => {
@@ -83,6 +101,9 @@ export default function App() {
       setSearch('');
       setFiltersOpen(false);
       feed.setShowingSaved(true);
+    } else if (action === 'account') {
+      setAuthDialogMode('signin');
+      setAuthDialogOpen(true);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -110,15 +131,25 @@ export default function App() {
     }
   }
 
+  async function signOut() {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Could not sign out:', error?.message || error);
+    }
+  }
+
   return (
     <>
       <AppHeader
         theme={preferences.theme}
         savedCount={savedArticles.length}
+        authUser={auth.user}
         installAvailable={installAvailable}
         onThemeChange={changeTheme}
         onNavigate={navigate}
         onInstall={installApp}
+        onSignOut={signOut}
       >
         <FilterPanel
           open={filtersOpen}
@@ -158,17 +189,18 @@ export default function App() {
           </nav>
         </div>
         <div className="notes ui" id="notes" aria-live="polite">
+          {library.error && <div className="note" role="alert">{library.error}</div>}
           {feed.loadingMessage && <div className="note info">{feed.loadingMessage}</div>}
           {feed.notes.map(note => <div className={`note${note.info ? ' info' : ''}`} key={note.id}>{note.message}</div>)}
         </div>
         <div className="grid" id="grid">
           <NewsGrid
-            groups={feed.groups}
+            groups={feed.showingSaved && library.loading ? [] : feed.groups}
             showingSaved={feed.showingSaved}
             totalArticles={feed.totalArticles}
-            loading={feed.loading}
+            loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}
-            onSave={article => setSavedArticles(feed.toggleSavedArticle(article))}
+            onSave={library.saveArticle}
           />
         </div>
       </main>
@@ -185,6 +217,17 @@ export default function App() {
           <img className="footer-logo" src="/one-news-hub-192.png" alt="One News Hub logo" width="74" height="74" />
         </div>
       </footer>
+      <AuthDialog
+        open={authDialogOpen}
+        initialMode={authDialogMode}
+        configured={auth.configured}
+        onClose={closeAuthDialog}
+        onSignIn={auth.signIn}
+        onSignUp={auth.signUp}
+        onSendPasswordReset={auth.sendPasswordReset}
+        onUpdatePassword={auth.updatePassword}
+        onSuccess={closeAuthDialog}
+      />
     </>
   );
 }

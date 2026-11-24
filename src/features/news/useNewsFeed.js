@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { classifyArticle } from './classification.js';
 import { createNewsService } from './newsService.js';
 import { CATEGORIES, SOURCES } from './newsSources.js';
-import { articleKey, storage } from '../../shared/storage.js';
+import { storage } from '../../shared/storage.js';
 
 const STOP_WORDS = new Set('the a an of to in on for and or at by with is are was be as from after over says said new how why what who will its it this that into amid'.split(' '));
 const cache = storage;
@@ -181,15 +181,6 @@ export function useNewsFeed(preferences, search, savedArticles) {
   const groups = useMemo(() => groupStories(visibleArticles), [visibleArticles]);
   const categoryNav = useMemo(() => categoryButtons(articles, preferences, activeCategory, showingSaved), [articles, preferences, activeCategory, showingSaved]);
 
-  const toggleSavedArticle = useCallback(article => {
-    const key = articleKey(article);
-    const next = savedArticles.some(saved => articleKey(saved) === key)
-      ? savedArticles.filter(saved => articleKey(saved) !== key)
-      : [{ ...article, _t: undefined }, ...savedArticles];
-    storage.set('dnh_saved_articles', next);
-    return next;
-  }, [savedArticles]);
-
   return {
     articles,
     groups,
@@ -203,7 +194,6 @@ export function useNewsFeed(preferences, search, savedArticles) {
     setActiveCategory,
     showingSaved,
     setShowingSaved,
-    reload,
-    toggleSavedArticle
+    reload
   };
 }

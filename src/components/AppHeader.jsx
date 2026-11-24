@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function AppHeader({ theme, savedCount, installAvailable, onThemeChange, onNavigate, onInstall, children }) {
+export default function AppHeader({ theme, savedCount, authUser, installAvailable, onThemeChange, onNavigate, onInstall, onSignOut, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRoot = useRef(null);
   const menuButton = useRef(null);
@@ -26,6 +26,7 @@ export default function AppHeader({ theme, savedCount, installAvailable, onTheme
   function selectMenuAction(action) {
     setMenuOpen(false);
     if (action === 'install') onInstall();
+    else if (action === 'signout') onSignOut();
     else onNavigate(action);
   }
 
@@ -65,6 +66,14 @@ export default function AppHeader({ theme, savedCount, installAvailable, onTheme
               <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">⌂</span>Home</button>
               <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">☷</span>Filters</button>
               {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">⬇</span>Install app</button>}
+              {authUser ? (
+                <>
+                  <div className="menu-account" title={authUser.email || 'Signed-in account'}>{authUser.email || 'Signed in'}</div>
+                  <button type="button" onClick={() => selectMenuAction('signout')}><span className="menu-symbol">↪</span>Sign out</button>
+                </>
+              ) : (
+                <button type="button" onClick={() => selectMenuAction('account')}><span className="menu-symbol">♙</span>Sign in / Sign up</button>
+              )}
               <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">★</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
             </nav>
           </div>

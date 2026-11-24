@@ -24,3 +24,13 @@ export function loadSavedArticles() {
   const saved = storage.get('dnh_saved_articles', []);
   return Array.isArray(saved) ? saved : [];
 }
+
+
+export function toggleSavedArticle(current, article) {
+  const saved = Array.isArray(current) ? current : [];
+  const key = articleKey(article);
+  if (!key) return saved;
+  return saved.some(item => articleKey(item) === key)
+    ? saved.filter(item => articleKey(item) !== key)
+    : [{ ...article, _t: undefined }, ...saved];
+}
