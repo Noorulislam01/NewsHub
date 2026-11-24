@@ -45,10 +45,16 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .category-nav{min-width:0;flex:1;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 0}
 .category-nav::-webkit-scrollbar{display:none}
 .category-nav[hidden]{display:none}
-.refresh-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--accent);font:700 1.35rem/1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 2px 7px rgba(20,25,35,.06);transition:background .15s ease,border-color .15s ease,transform .15s ease}
-.refresh-icon:hover{border-color:var(--accent);background:var(--chip);transform:rotate(18deg)}
-.refresh-icon:active{transform:rotate(0)}
-.refresh-icon:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.refresh-icon{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:15;width:46px;height:46px;display:grid;place-items:center;padding:0;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:50%;background:var(--surface);color:var(--accent);cursor:pointer;box-shadow:0 4px 14px rgba(20,25,35,.18);transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.refresh-icon svg{width:22px;height:22px;display:block}
+.refresh-icon:hover{border-color:var(--accent);background:var(--chip);transform:scale(1.06)}
+.refresh-icon:active{transform:scale(.94)}
+.refresh-icon:disabled{cursor:wait;opacity:.85}
+.refresh-icon.is-refreshing svg{animation:refreshSpin .8s linear infinite}
+.refresh-icon:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@keyframes refreshSpin{to{transform:rotate(360deg)}}
+@media(max-width:700px){.refresh-icon{right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:52px;height:52px}.refresh-icon svg{width:25px;height:25px}}
+@media(prefers-reduced-motion:reduce){.refresh-icon,.refresh-icon svg{transition:none;animation:none!important}}
 .category-pill{flex:0 0 auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:var(--chip);color:var(--ink);font:600 .86rem system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease}
 .category-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
 .category-pill[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -338,11 +344,13 @@ body.filters-open footer.site-footer{margin-top:auto}
   </div>
   <div class="category-bar ui" id="categoryBar" hidden>
     <nav class="category-nav" id="categoryNav" aria-label="Browse news categories"></nav>
-    <button class="refresh-icon" id="refreshBtn" type="button" aria-label="Refresh news" title="Refresh news">↻</button>
   </div>
   <div class="notes ui" id="notes"></div>
   <div class="grid" id="grid"></div>
 </main>
+<button class="refresh-icon" id="refreshBtn" type="button" aria-label="Refresh news" title="Refresh news">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg>
+</button>
 <footer class="site-footer ui">
   <div class="footer-inner">
     <div class="footer-copy">
@@ -406,7 +414,7 @@ const SOURCES=[
 ];
 const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars'];
 const CATS=['All News','Politics','National','International','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
-/* Keyword rules use word boundaries to limit false positives. Title matches are used; RSS category tags are added to the text. */
+/* Keyword rules use word boundaries. Publisher section labels take priority when they map to an app category. */
 const RULES={
  'Politics':/\b(bjp|congress|aap|tmc|lok sabha|rajya sabha|election|poll|mla|mp|minister|chief minister|opposition|parliament|assembly|party)\b/i,
  'International':/\b(us|u\.s\.|china|pakistan|russia|ukraine|gaza|israel|trump|biden|un|nato|world|britain|uk|europe|iran|bangladesh|nepal|sri lanka)\b/i,
@@ -531,8 +539,10 @@ function parseFeed(xml){
     if(!img){const g=(enc||raw).match(/<img[^>]+src=["']([^"']+)/i);if(g)img=g[1]}
     const ds=txt(n,'pubDate')||txt(n,'published')||txt(n,'updated')||txt(n,'dc:date');
     const t=ds?Date.parse(ds):NaN;
+    const rssCats=[...n.getElementsByTagNameNS('*','category'),...n.getElementsByTagNameNS('*','subject')]
+      .map(c=>(c.getAttribute('term')||c.getAttribute('label')||c.textContent||'').trim()).filter(Boolean);
     return{title:plain(txt(n,'title')),link:safeUrl(link),summary:plain(raw).slice(0,220),img:safeUrl(img),
-      date:isNaN(t)?null:t,rssCats:[...n.getElementsByTagName('category')].map(c=>c.textContent.trim()).join(' ')};
+      date:isNaN(t)?null:t,rssCats:[...new Set(rssCats)]};
   }).filter(a=>a.title&&a.link);
 }
 async function loadSource(src,force){
@@ -577,12 +587,49 @@ async function loadSource(src,force){
 
 /* ---------- Classification, filtering, dedupe ---------- */
 function classify(a){
-  const hay=a.title+' '+a.rssCats;const hits=[];
-  for(const[k,r]of Object.entries(RULES))if(r.test(hay))hits.push(k);
-  if(!hits.length&&NATIONAL.test(a.title))hits.push('National');
+  const labels=Array.isArray(a.rssCats)?a.rssCats:(a.rssCats?[String(a.rssCats)]:[]);
+  const normalize=s=>String(s).toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+  const normalizedLabels=labels.map(normalize).filter(Boolean);
+  const publisherText=labels.join(' '),publisherHits=[];
+  const aliases={
+    'National':['india','indian','domestic','nation'],
+    'International':['world','global','foreign affairs','overseas'],
+    'Politics':['political'],
+    'Business':['business news','finance','financial'],
+    'Economy':['economic','economics'],
+    'Technology':['tech','gadgets'],
+    'Artificial Intelligence':['ai','machine learning'],
+    'Science':['scientific'],
+    'Education':['educational'],
+    'Sports':['sport'],
+    'Entertainment':['movies','film','television','tv'],
+    'Health':['healthcare','medicine'],
+    'Lifestyle':['life style','fashion','travel'],
+    'Environment':['climate','weather','nature'],
+    'Crime':['law enforcement'],
+    'Government & Policies':['government','policy','policies'],
+    'Startups':['startup','entrepreneurship'],
+    'Automobile':['automobile','automotive','cars','motoring'],
+    'Agriculture':['farming','farm']
+  };
+  for(const category of CATS){
+    if(category==='All News')continue;
+    const names=[category,...(aliases[category]||[])].map(normalize);
+    if(normalizedLabels.some(label=>names.includes(label)))publisherHits.push(category);
+  }
+  // Handle descriptive publisher labels such as "AI & Technology" or "World Politics".
+  if(publisherText){
+    for(const[k,r]of Object.entries(RULES))if(r.test(publisherText)&&!publisherHits.includes(k))publisherHits.push(k);
+    if(/\b(national|india|indian|domestic)\b/i.test(publisherText)&&!publisherHits.includes('National'))publisherHits.push('National');
+  }
+  const hits=publisherHits.length?publisherHits:[];
+  const hay=(a.title||'')+' '+(a.summary||'');
+  if(!hits.length){
+    for(const[k,r]of Object.entries(RULES))if(r.test(hay))hits.push(k);
+    if(!hits.length&&NATIONAL.test(a.title||''))hits.push('National');
+  }
   if(hits.includes('Cricket')&&!hits.includes('Sports'))hits.push('Sports');
   if(hits.includes('Bollywood')&&!hits.includes('Entertainment'))hits.push('Entertainment');
-  if(/\b(national|india)\b/i.test(a.rssCats)&&!hits.includes('National'))hits.push('National');
   return hits.length?hits:['General'];
 }
 const STOP=new Set('the a an of to in on for and or at by with is are was be as from after over says said new how why what who will its it this that into amid'.split(' '));
@@ -626,7 +673,7 @@ function updateCategoryNav(){
   const showReset=!selected.length||selected.length>1;
   const buttons=[...(showReset?[{label:resetLabel,value:'',active:activeCategory===null}]:[]),
     ...categories.map(c=>({label:c,value:c,active:activeCategory===c||(!activeCategory&&selected.length===1)}))];
-  bar.hidden=false;
+  bar.hidden=!buttons.length;
   nav.hidden=!buttons.length;
   nav.innerHTML=buttons.map(b=>`<button class="category-pill" type="button" data-category-nav="${esc(b.value)}" aria-pressed="${b.active}">${esc(b.label)}</button>`).join('');
 }
@@ -817,7 +864,14 @@ function init(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();menuBtn.focus();}});
   setFilters(false); // Start on the news home; filters open only from the hamburger menu.
   $('#showBtn').onclick=()=>{prefs.range=$('#range').value;activeCategory=null;savePrefs();setFilters(false);load(false);window.scrollTo({top:0,behavior:'smooth'});};
-  $('#refreshBtn').onclick=()=>load(true);
+  const refreshButton=$('#refreshBtn');
+  refreshButton.onclick=async()=>{
+    if(refreshButton.disabled)return;
+    window.scrollTo({top:0,behavior:'smooth'});
+    refreshButton.disabled=true;
+    refreshButton.classList.add('is-refreshing');
+    try{await load(true)}finally{refreshButton.disabled=false;refreshButton.classList.remove('is-refreshing')}
+  };
   $('#allBtn').onclick=()=>{prefs.papers=SOURCES.map(s=>s.id);drawP();savePrefs();updCounts()};
   $('#clearBtn').onclick=()=>{prefs.papers=DEFAULT_PAPERS;prefs.cats=['All News'];prefs.range='latest';activeCategory=null;$('#range').value='latest';$('#q').value='';drawP();drawC();savePrefs();load(false)};
   $('#themeBtn').onclick=()=>{prefs.theme=prefs.theme==='dark'?'light':'dark';applyTheme();savePrefs()};
