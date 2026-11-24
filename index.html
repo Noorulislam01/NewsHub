@@ -40,9 +40,15 @@ header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:
 main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .stats{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:.9rem;margin-bottom:12px}
 .stats b{color:var(--ink)}
-.category-nav{position:sticky;top:64px;z-index:10;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px 12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.category-bar{position:sticky;top:64px;z-index:10;display:flex;align-items:center;gap:8px;margin:0 -16px 12px;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line)}
+.category-bar[hidden]{display:none}
+.category-nav{min-width:0;flex:1;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 0}
 .category-nav::-webkit-scrollbar{display:none}
 .category-nav[hidden]{display:none}
+.refresh-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--accent);font:700 1.35rem/1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 2px 7px rgba(20,25,35,.06);transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.refresh-icon:hover{border-color:var(--accent);background:var(--chip);transform:rotate(18deg)}
+.refresh-icon:active{transform:rotate(0)}
+.refresh-icon:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .category-pill{flex:0 0 auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:var(--chip);color:var(--ink);font:600 .86rem system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease}
 .category-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
 .category-pill[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -80,7 +86,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 @media (prefers-reduced-motion:reduce){.skel{animation:none}}
 .tools.hide{display:none}
 main.filters-mode{display:none}
-@media(max-width:700px){header{position:sticky;top:0}.brand{font-size:1.35rem}.theme-icon{flex:0 0 44px}.filter-row{padding-top:0}.category-nav{top:62px}}
+@media(max-width:700px){header{position:sticky;top:0}.brand{font-size:1.35rem}.theme-icon{flex:0 0 44px}.filter-row{padding-top:0}.category-bar{top:62px}}
 footer.site-footer{max-width:none;margin-top:32px;padding:0;border-top:1px solid var(--line);background:var(--surface);color:var(--mute);font-size:.88rem}
 body.filters-open footer.site-footer{margin-top:auto}
 .footer-inner{max-width:1200px;margin:auto;padding:22px 16px;display:flex;align-items:center;gap:28px}
@@ -304,7 +310,6 @@ body.filters-open footer.site-footer{margin-top:auto}
       <nav class="menu-panel" id="mainMenu" aria-label="Main menu" hidden>
         <button type="button" data-menu-action="home"><span class="menu-symbol">⌂</span>Home</button>
         <button type="button" data-menu-action="filters"><span class="menu-symbol">☷</span>Filters</button>
-        <button type="button" data-menu-action="refresh"><span class="menu-symbol">↻</span>Refresh news</button>
         <button type="button" data-menu-action="install" id="installBtn" hidden><span class="menu-symbol">⬇</span>Install app</button>
         <button type="button" data-menu-action="saved"><span class="menu-symbol">★</span>Saved Articles <span class="saved-count" id="savedCount">0</span></button>
       </nav>
@@ -320,7 +325,6 @@ body.filters-open footer.site-footer{margin-top:auto}
       <option value="48">Last 48 Hours</option><option value="168">Last 7 Days</option>
     </select>
     <button class="btn primary" id="showBtn">SHOW NEWS</button>
-    <button class="btn" id="refreshBtn">Refresh News</button>
     <button class="btn" id="clearBtn">Clear Filters</button>
     <button class="btn" id="allBtn">Select All Newspapers</button>
   </div>
@@ -332,7 +336,10 @@ body.filters-open footer.site-footer{margin-top:auto}
     <span>Feeds loaded: <b id="sOk">0</b></span>
     <span>Last updated: <b id="sTime">never</b></span>
   </div>
-  <nav class="category-nav ui" id="categoryNav" aria-label="Browse news categories" hidden></nav>
+  <div class="category-bar ui" id="categoryBar" hidden>
+    <nav class="category-nav" id="categoryNav" aria-label="Browse news categories"></nav>
+    <button class="refresh-icon" id="refreshBtn" type="button" aria-label="Refresh news" title="Refresh news">↻</button>
+  </div>
   <div class="notes ui" id="notes"></div>
   <div class="grid" id="grid"></div>
 </main>
@@ -369,7 +376,7 @@ const PROXY_BUILDERS=[
 const WORKER_URL='https://sparkling-glade-bb6d.webmiscuser.workers.dev/';
 if(WORKER_URL)PROXY_BUILDERS.unshift(feed=>WORKER_URL+(WORKER_URL.includes('?')?'':'?')+'url='+encodeURIComponent(feed));
 const DIRECT_TIMEOUT_MS=4000, PROXY_TIMEOUT_MS=9000, STAGGER_MS=600, MAX_FEEDS_TRIED=2;
-const CACHE_TTL=10*60*1000, HISTORY_TTL=7*24*60*60*1000, AUTO_REFRESH_MS=15*60*1000;
+const CACHE_TTL=10*60*1000, HISTORY_TTL=7*24*60*60*1000;
 const SOURCES=[
  {id:'ht',name:'Hindustan Times',feeds:['https://www.hindustantimes.com/feeds/rss/latest/rssfeed.xml']},
  {id:'hindu',name:'The Hindu',feeds:['https://www.thehindu.com/feeder/default.rss','https://www.thehindu.com/news/national/feeder/default.rss']},
@@ -603,9 +610,10 @@ function toggleSavedArticle(a){
   else view();
 }
 function updateCategoryNav(){
+  const bar=$('#categoryBar');
   const nav=$('#categoryNav');
-  if(!nav)return;
-  if(showingSaved){nav.hidden=true;nav.innerHTML='';return}
+  if(!bar||!nav)return;
+  if(showingSaved){bar.hidden=true;nav.innerHTML='';return}
   const selected=prefs.cats.filter(c=>c!=='All News');
   let categories=selected;
   if(!selected.length){
@@ -618,6 +626,7 @@ function updateCategoryNav(){
   const showReset=!selected.length||selected.length>1;
   const buttons=[...(showReset?[{label:resetLabel,value:'',active:activeCategory===null}]:[]),
     ...categories.map(c=>({label:c,value:c,active:activeCategory===c||(!activeCategory&&selected.length===1)}))];
+  bar.hidden=false;
   nav.hidden=!buttons.length;
   nav.innerHTML=buttons.map(b=>`<button class="category-pill" type="button" data-category-nav="${esc(b.value)}" aria-pressed="${b.active}">${esc(b.label)}</button>`).join('');
 }
@@ -792,7 +801,6 @@ function init(){
       setFilters(true);
       window.scrollTo({top:0,behavior:'smooth'});
     }
-    if(action==='refresh'){load(true);}
     if(action==='install'&&deferredInstall){
       deferredInstall.prompt();
       deferredInstall.userChoice.finally(()=>{deferredInstall=null;$('#installBtn').hidden=true});
@@ -815,10 +823,8 @@ function init(){
   $('#themeBtn').onclick=()=>{prefs.theme=prefs.theme==='dark'?'light':'dark';applyTheme();savePrefs()};
   $('#range').onchange=()=>{prefs.range=$('#range').value;activeCategory=null;savePrefs();load(false)};
   let t;$('#q').oninput=()=>{clearTimeout(t);t=setTimeout(view,200)};
-  addEventListener('online',()=>load(true));
   addEventListener('offline',()=>note('You are offline. Showing last loaded results.',true));
-  setInterval(()=>{if(!document.hidden)load(true)},AUTO_REFRESH_MS);
-  load(false);                                  // automatic initial load with saved or default prefs
+  load(false);                                  // initial load; future refreshes are user initiated
 }
 init();
 
