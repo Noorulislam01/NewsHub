@@ -9,9 +9,9 @@ header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:
 .bar{max-width:1200px;margin:auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:nowrap}
 .filter-row{max-width:1200px;margin:auto;padding:0 16px 10px;display:flex;align-items:center}
 .theme-icon{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:1.55rem;line-height:1;border-radius:50%;margin-left:auto;transition:background .18s ease,border-color .18s ease,transform .18s ease}
-.theme-icon:hover{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}
 .theme-icon:active{background:var(--chip);border-color:var(--accent);transform:scale(.9)}
 .theme-icon:focus-visible{border-color:var(--accent)}
+@media (hover:hover) and (pointer:fine){.theme-icon:hover{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}}
 .theme-symbol{display:block;animation:themeGlyphChange .28s cubic-bezier(.2,.75,.25,1) both}
 @keyframes themeGlyphChange{from{opacity:0;transform:rotate(-80deg) scale(.55)}to{opacity:1;transform:rotate(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.theme-icon,.theme-symbol{transition:none;animation:none}}
@@ -143,7 +143,8 @@ body.filters-open footer.site-footer{margin-top:auto}
   box-shadow:0 2px 8px rgba(20,25,35,.06);
   transition:background .18s ease,border-color .18s ease,transform .18s ease;
 }
-.menu-toggle:hover{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}
+.menu-toggle:active{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}
+@media (hover:hover) and (pointer:fine){.menu-toggle:hover{background:var(--chip);border-color:var(--accent);transform:translateY(-1px)}}
 .menu-toggle span{display:block;width:19px;height:2px;border-radius:4px;background:var(--ink);transition:transform .2s ease,opacity .2s ease}
 .menu-toggle[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)}
 .menu-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
