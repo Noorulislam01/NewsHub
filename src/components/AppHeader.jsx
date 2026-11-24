@@ -76,7 +76,7 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
                 type="button"
                 className="menu-account-button"
                 aria-expanded={Boolean(authUser && accountExpanded)}
-                aria-controls="menuAccountEmail"
+                aria-controls="menuAccountDetails"
                 onClick={() => authUser
                   ? setAccountExpanded(expanded => !expanded)
                   : selectMenuAction('account')}
@@ -87,11 +87,17 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
                 </svg>
                 Account
               </button>
-              {authUser && accountExpanded && <div className="menu-account" id="menuAccountEmail" role="status">{authUser.email || 'Signed in'}</div>}
+              {authUser && accountExpanded && (
+                <div className="menu-account-details" id="menuAccountDetails">
+                  <div className="menu-account" role="status">{authUser.email || 'Signed in'}</div>
+                  <button type="button" className="menu-account-signout" onClick={() => selectMenuAction('signout')}>
+                    <span className="menu-symbol">&#x21AA;</span>Sign out
+                  </button>
+                </div>
+              )}
               <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
               <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">&#x2637;</span>Filters</button>
               {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">&#x2B07;</span>Install app</button>}
-              {authUser && <button type="button" onClick={() => selectMenuAction('signout')}><span className="menu-symbol">&#x21AA;</span>Sign out</button>}
               <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">&#x2605;</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
             </nav>
           </div>
