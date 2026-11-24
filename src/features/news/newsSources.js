@@ -1,0 +1,62 @@
+export const SOURCES=[
+ {id:'ht',name:'Hindustan Times',feeds:['https://www.hindustantimes.com/feeds/rss/latest/rssfeed.xml']},
+ {id:'hindu',name:'The Hindu',feeds:['https://www.thehindu.com/feeder/default.rss','https://www.thehindu.com/news/national/feeder/default.rss']},
+ {id:'ie',name:'The Indian Express',feeds:['https://indianexpress.com/feed/','https://indianexpress.com/rss/']},
+ {id:'toi',name:'Times of India',feeds:['https://timesofindia.indiatimes.com/rssfeedstopstories.cms']},
+ {id:'wire',name:'The Wire',searchHost:'thewire.in',feeds:['https://cms.thewire.in/feed','https://thewire.in/feed/']},
+ {id:'ndtv',name:'NDTV',searchHost:'ndtv.com',feeds:['https://feeds.feedburner.com/ndtvnews-latest']},
+ {id:'it',name:'India Today',feeds:['https://www.indiatoday.in/rss/1206578']},
+ {id:'print',name:'The Print',feeds:['https://theprint.in/feed/','https://theprint.in/category/india/feed/','https://theprint.in/category/politics/feed/','https://theprint.in/category/economy/feed/']},
+ {id:'scroll',name:'Scroll.in',searchHost:'scroll.in',feeds:['https://feeds.feedburner.com/ScrollinArticles.rss']},
+ {id:'tnie',name:'New Indian Express',feeds:['https://www.newindianexpress.com/feed','https://www.newindianexpress.com/Nation/rssfeed/?id=170&getXmlFeed=true','https://www.newindianexpress.com/rssfeed/','https://www.newindianexpress.com/rss']},
+ {id:'dh',name:'Deccan Herald',feeds:['https://www.deccanherald.com/feed','https://www.deccanherald.com/rss-feed/','https://www.deccanherald.com/rss-feed/india']},
+ {id:'tribune',name:'The Tribune',feeds:['https://publish.tribuneindia.com/newscategory/nation/feed/','https://publish.tribuneindia.com/newscategory/india/feed/','https://www.tribuneindia.com/rss/feed?catId=1']},
+ {id:'mint',name:'Livemint',feeds:['https://www.livemint.com/rss/news']},
+ {id:'bs',name:'Business Standard',feeds:['https://www.business-standard.com/rss/latest.rss']},
+ {id:'n18',name:'News18',feeds:['https://www.news18.com/commonfeeds/v1/eng/rss/india.xml']},
+ {id:'fp',name:'Firstpost',feeds:['https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml']},
+ {id:'bhaskar',name:'Dainik Bhaskar',feeds:['https://www.bhaskar.com/rss-v1--category-1061.xml']},
+ {id:'abp',name:'ABP News',feeds:['https://news.abplive.com/home/feed']},
+ {id:'orf',name:'Observer Research Foundation',searchHost:'orfonline.org',feeds:['https://www.orfonline.org/feed/']},
+ {id:'cfr',name:'Council on Foreign Relations',feeds:['https://www.cfr.org/feed']},
+ {id:'techcrunch',name:'TechCrunch',feeds:['https://techcrunch.com/feed/']},
+ {id:'verge',name:'The Verge',feeds:['https://www.theverge.com/rss/index.xml']},
+ {id:'wired',name:'WIRED',feeds:['https://www.wired.com/feed/rss']},
+ {id:'mittr',name:'MIT Technology Review',feeds:['https://www.technologyreview.com/feed/']},
+ {id:'ars',name:'Ars Technica',searchHost:'arstechnica.com',feeds:['https://feeds.arstechnica.com/arstechnica/index']},
+ {id:'sciencedaily',name:'ScienceDaily',searchHost:'sciencedaily.com',feeds:['https://www.sciencedaily.com/rss/all.xml']},
+ {id:'medicalxpress',name:'Medical Xpress',searchHost:'medicalxpress.com',feeds:['https://medicalxpress.com/rss-feed/']},
+ {id:'stat',name:'STAT',searchHost:'statnews.com',feeds:['https://www.statnews.com/feed/','https://www.statnews.com/category/health-tech/feed']},
+ {id:'thescientist',name:'The Scientist',searchHost:'the-scientist.com',feeds:['https://www.the-scientist.com/atom/latest']},
+ {id:'nature',name:'Nature News',searchHost:'nature.com',feeds:['https://www.nature.com/nature.rss']}
+];
+export const NEW_RESEARCH_SOURCE_IDS=['sciencedaily','medicalxpress','stat','thescientist','nature'];
+export const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars',...NEW_RESEARCH_SOURCE_IDS];
+
+export const CATEGORIES=['All News','Politics','National','International','Opinion','Explained','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
+/* Keyword rules use word boundaries. Publisher section labels take priority when they map to an app category. */
+export const RULES={
+ 'Politics':/\b(bjp|congress|aap|tmc|lok sabha|rajya sabha|election|poll|mla|mp|minister|chief minister|opposition|parliament|assembly|party)\b/i,
+ 'International':/\b(us|u\.s\.|china|pakistan|russia|ukraine|gaza|israel|trump|biden|un|nato|world|britain|uk|europe|iran|bangladesh|nepal|sri lanka)\b/i,
+ 'Opinion':/\b(opinion|editorial|op-?ed|commentary|columns?|viewpoint|perspective)\b/i,
+ 'Explained':/\b(explained|explainers?)\b/i,
+ 'Business':/\b(sensex|nifty|stock|shares|market|company|ipo|profit|revenue|bank|rbi|rupee|earnings|merger|business)\b/i,
+ 'Economy':/\b(gdp|inflation|economy|fiscal|budget|gst|tax|trade deficit|exports|imports|repo rate|economic)\b/i,
+ 'Technology':/\b(tech|smartphone|iphone|android|google|apple|microsoft|software|app|5g|cyber|semiconductor|gadget)\b/i,
+ 'Artificial Intelligence':/\b(ai|artificial intelligence|chatgpt|openai|llm|machine learning|generative|gemini|claude|deepfake)\b/i,
+ 'Science':/\b(isro|nasa|space|scientist|research|study finds|astronomy|physics|climate science|satellite|chandrayaan)\b/i,
+ 'Education':/\b(exam|neet|jee|cbse|ugc|university|school|students?|admission|result|board exams?|college|iit|upsc)\b/i,
+ 'Sports':/\b(match|tournament|olympic|football|hockey|tennis|badminton|athlete|fifa|ipl|medal|kabaddi|champion)\b/i,
+ 'Cricket':/\b(cricket|ipl|bcci|test match|odi|t20|wicket|batsman|bowler|kohli|rohit sharma|dhoni)\b/i,
+ 'Entertainment':/\b(film|movie|series|ott|netflix|actor|actress|box office|trailer|album|singer|web series)\b/i,
+ 'Bollywood':/\b(bollywood|shah rukh|salman khan|aamir|deepika|alia bhatt|ranveer|akshay kumar|hindi film)\b/i,
+ 'Health':/\b(health|hospital|doctor|disease|virus|vaccine|cancer|diabetes|covid|medical|who|icmr|dengue)\b/i,
+ 'Lifestyle':/\b(lifestyle|fashion|travel|recipe|wellness|fitness|diet|relationship|festival|wedding)\b/i,
+ 'Environment':/\b(pollution|climate|aqi|air quality|wildlife|forest|flood|monsoon|emission|global warming|biodiversity)\b/i,
+ 'Crime':/\b(murder|arrested|arrest|police|rape|fir|theft|robbery|killed|accused|cbi|ed|court|scam|fraud)\b/i,
+ 'Government & Policies':/\b(scheme|policy|cabinet|notification|ministry|government|bill|ordinance|yojana|supreme court|high court|regulation)\b/i,
+ 'Startups':/\b(startup|start-up|funding round|unicorn|venture capital|founder|series a|series b|seed round)\b/i,
+ 'Automobile':/\b(car|cars|suv|ev|electric vehicle|bike|motorcycle|tesla|maruti|tata motors|mahindra|automobile|scooter)\b/i,
+ 'Agriculture':/\b(farmer|farmers|crop|msp|kharif|rabi|agriculture|irrigation|fertiliser|fertilizer|paddy|wheat)\b/i
+};
+export const NATIONAL=/\b(india|indian|delhi|mumbai|kolkata|chennai|bengaluru|hyderabad|modi|centre|state)\b/i;

@@ -1,12 +1,29 @@
-# Deploy to Vercel
+# One News Hub
 
-This project is a static HTML site with one Vercel Function for article summaries.
+One News Hub is being migrated incrementally to React with Vite. The existing visual design, RSS feed behavior, saved stories, summaries, filters, theme controls, and PWA support are being preserved during the migration.
 
-1. Import the GitHub repository `Noorulislam01/NewsHub` into Vercel.
-2. Set the Framework Preset to **Other**. Leave the Build Command blank and use `.` as the Output Directory (or leave the Output Directory override off).
-3. In **Project Settings > Environment Variables**, add `GEMINI_API_KEY` with your Google Gemini API key. Optionally set `GEMINI_MODEL` to choose the primary model and `GEMINI_FALLBACK_MODEL` to choose the fallback model; defaults are configured in `api/summarize.mjs`.
-4. Deploy the project.
+## Local development
 
-The site and news feeds work without an AI key, but article summaries need `GEMINI_API_KEY` or `ANTHROPIC_API_KEY` configured in Vercel. Keep provider keys in Vercel environment variables; do not put them in `index.html`.
+Use Node.js 20 or newer and npm.
 
-The summaries route is `/api/summarize`. The same handler is also exposed through the existing Netlify function and redirect, so Netlify deployments can continue using this repository.
+```sh
+npm install
+npm run dev
+```
+
+This starts the Vite UI preview at `http://localhost:5173`. The summary API is a Vercel Function, so use `npm run dev:vercel` for local summaries. Link the checkout to the Vercel project first if prompted, then pull the project’s development environment variables when the local function needs the Gemini key. Keep keys in local environment files or Vercel; never commit them.
+
+## Production build
+
+```sh
+npm run build
+```
+
+Vite writes the deployable site to `dist/`. The Vercel configuration uses that directory and keeps the summary function in `api/`. Netlify builds the same Vite output and continues to expose its summary adapter.
+
+## Deploying
+
+- **Vercel:** Framework preset **Other**, build command `npm run build`, output directory `dist`. Configure `GEMINI_API_KEY` (and optional `GEMINI_MODEL` / `GEMINI_FALLBACK_MODEL`) for the serverless summary function.
+- **Netlify:** use the repository’s `netlify.toml`; configure the same server-side AI environment variables if summaries are needed.
+
+Do not commit `.env` files or API keys.
