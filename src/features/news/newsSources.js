@@ -14,7 +14,7 @@ export const SOURCES=[
  {id:'siasat',name:'Siasat Daily',searchHost:'siasat.com',searchOnly:true,feeds:[]},
  {id:'milligazette',name:'The Milli Gazette',searchHost:'milligazette.com',feeds:['https://www.milligazette.com/rss/news.rss']},
  {id:'munsif',name:'Munsif Daily',searchHost:'munsifdaily.com',feeds:['https://munsifdaily.com/feed/']},
- {id:'aawaz',name:'Awaaz The Voice',searchHost:'theaawaz.com',searchOnly:true,feeds:[]},
+ {id:'aawaz',name:'Awaaz The Voice',searchHost:'awazthevoice.in',searchOnly:true,feeds:[]},
  {id:'ndtv',name:'NDTV',searchHost:'ndtv.com',feeds:['https://feeds.feedburner.com/ndtvnews-latest']},
  {id:'it',name:'India Today',feeds:['https://www.indiatoday.in/rss/1206578']},
  {id:'print',name:'The Print',feeds:['https://theprint.in/feed/','https://theprint.in/category/india/feed/','https://theprint.in/category/politics/feed/','https://theprint.in/category/economy/feed/']},
