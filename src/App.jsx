@@ -247,6 +247,7 @@ export default function App() {
           <NewsGrid
             groups={feed.showingSaved && library.loading ? [] : feed.groups}
             showingSaved={feed.showingSaved}
+            resetKey={`${feed.activeCategory || ''}|${search}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}`}
             totalArticles={feed.totalArticles}
             loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}

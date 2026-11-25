@@ -15,14 +15,17 @@ if(typeof window!=='undefined')PROXY_BUILDERS.unshift(feed=>'/api/news-feed?url=
 const DIRECT_TIMEOUT_MS=4000, PROXY_TIMEOUT_MS=9000, STAGGER_MS=600, MAX_FEEDS_TRIED=2;
 const CACHE_TTL=10*60*1000, HISTORY_TTL=7*24*60*60*1000;
 
-  async function timedFetch(url,timeoutMs){
+  async function timedFetch(url,timeoutMs,controller){
   let timer;
   try{
     const timeout=new Promise((_,reject)=>{
-      timer=setTimeout(()=>{reject(new Error('timed out after '+Math.round(timeoutMs/1000)+'s'))},timeoutMs);
+      timer=setTimeout(()=>{
+        controller.abort();
+        reject(new Error('timed out after '+Math.round(timeoutMs/1000)+'s'));
+      },timeoutMs);
     });
     const request=(async()=>{
-      const response=await fetch(url,{credentials:'omit'});
+      const response=await fetch(url,{credentials:'omit',signal:controller.signal});
       if(!response.ok)throw new Error('HTTP '+response.status);
       return await response.text();
     })();
@@ -36,15 +39,25 @@ function fetchFirst(feed){
   const attempts=[{url:feed,timeout:DIRECT_TIMEOUT_MS},...PROXY_BUILDERS.map(b=>({url:b(feed),timeout:PROXY_TIMEOUT_MS}))];
   return new Promise((resolve,reject)=>{
     const timers=[];
+    const controllers=attempts.map(()=>new AbortController());
     let pending=attempts.length,done=false;const errs=[];
     attempts.forEach((at,i)=>{
       timers.push(setTimeout(async()=>{
         if(done)return;
                 try{
-          const items=parseFeed(await timedFetch(at.url,at.timeout));
-          if(!done){done=true;timers.forEach(clearTimeout);resolve(items)}
-        }catch(e){let h='?';try{h=new URL(at.url).hostname.replace(/^(www|api)\./,'')}catch(_){}errs.push(h+': '+(e&&e.message?e.message:'network error'))}
-        if(--pending===0&&!done)reject(new Error(errs.join(' | ')));
+          const items=parseFeed(await timedFetch(at.url,at.timeout,controllers[i]));
+          if(!done){
+            done=true;
+            timers.forEach(clearTimeout);
+            controllers.forEach((controller,index)=>{if(index!==i)controller.abort()});
+            resolve(items);
+          }
+        }catch(e){
+          if(done)return;
+          let h='?';try{h=new URL(at.url).hostname.replace(/^(www|api)\./,'')}catch(_){}
+          errs.push(h+': '+(e&&e.message?e.message:'network error'));
+          if(--pending===0)reject(new Error(errs.join(' | ')));
+        }
       },i*STAGGER_MS));
     });
   });

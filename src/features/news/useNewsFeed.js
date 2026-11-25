@@ -6,6 +6,7 @@ import { storage } from '../../shared/storage.js';
 
 const STOP_WORDS = new Set('the a an of to in on for and or at by with is are was be as from after over says said new how why what who will its it this that into amid'.split(' '));
 const ACTIVE_CATEGORY_KEY = 'inh_active_category';
+const MAX_CONCURRENT_SOURCES = 4;
 const cache = storage;
 
 function tokens(title) {
@@ -21,15 +22,32 @@ function similarity(left, right) {
 
 function groupStories(articles) {
   const groups = [];
+  const groupsByToken = new Map();
   for (const article of articles) {
     const articleTokens = tokens(article.title);
-    const match = articleTokens.size >= 4 && groups.find(group =>
-      group.main.pub !== article.pub &&
-      !group.others.some(other => other.pub === article.pub) &&
-      similarity(group.tokens, articleTokens) >= 0.6
-    );
+    const candidates = new Set();
+    if (articleTokens.size >= 4) {
+      for (const token of articleTokens) {
+        for (const group of groupsByToken.get(token) || []) candidates.add(group);
+      }
+    }
+    let match = null;
+    for (const group of [...candidates].sort((left, right) => left.order - right.order)) {
+      if (group.main.pub === article.pub || group.others.some(other => other.pub === article.pub)) continue;
+      if (similarity(group.tokens, articleTokens) >= 0.6) {
+        match = group;
+        break;
+      }
+    }
     if (match) match.others.push(article);
-    else groups.push({ main: article, others: [], tokens: articleTokens });
+    else {
+      const group = { main: article, others: [], tokens: articleTokens, order: groups.length };
+      groups.push(group);
+      for (const token of articleTokens) {
+        if (!groupsByToken.has(token)) groupsByToken.set(token, new Set());
+        groupsByToken.get(token).add(group);
+      }
+    }
   }
   return groups.map(({ main, others }) => ({ main, others }));
 }
@@ -94,13 +112,21 @@ export function useNewsFeed(preferences, search, savedArticles) {
     preferencesRef.current = currentPreferences;
     const sources = SOURCES.filter(source => currentPreferences.papers.includes(source.id));
     const bySource = {};
+    let articleUpdateFrame = 0;
     let updated = updatedRef.current;
     setNotes([]);
     setLoading(true);
     setLoadingMessage('');
 
     const appendNote = (message, info = false) => setNotes(current => [...current, { id: `${Date.now()}-${Math.random()}`, message, info }]);
-    const updateArticles = () => setArticles(sources.flatMap(source => bySource[source.id] || []));
+    const commitArticles = () => {
+      articleUpdateFrame = 0;
+      if (id !== requestId.current || !activeRef.current) return;
+      setArticles(sources.flatMap(source => bySource[source.id] || []));
+    };
+    const updateArticles = () => {
+      if (!articleUpdateFrame) articleUpdateFrame = window.requestAnimationFrame(commitArticles);
+    };
     const tagArticles = (source, items) => items.map(article => ({
       ...article,
       pid: source.id,
@@ -130,7 +156,7 @@ export function useNewsFeed(preferences, search, savedArticles) {
     setFeedStatus({ loaded: `0/${sources.length}`, updated });
     setLoadingMessage(`Updating news… 0/${sources.length} sources checked`);
 
-    await Promise.all(sources.map(async source => {
+    const loadSource = async source => {
       try {
         const result = await newsService.current.loadSource(source, force);
         if (id !== requestId.current || !activeRef.current) return;
@@ -150,9 +176,27 @@ export function useNewsFeed(preferences, search, savedArticles) {
       updateArticles();
       setFeedStatus({ loaded: `${succeeded}/${sources.length}`, updated });
       setLoadingMessage(`Updating news… ${finished}/${sources.length} sources checked`);
-    }));
+    };
+
+    let nextSource = 0;
+    const workers = Array.from(
+      { length: Math.min(MAX_CONCURRENT_SOURCES, sources.length) },
+      async () => {
+        while (nextSource < sources.length) {
+          if (id !== requestId.current || !activeRef.current) return;
+          const source = sources[nextSource++];
+          await loadSource(source);
+        }
+      }
+    );
+    await Promise.all(workers);
 
     if (id !== requestId.current || !activeRef.current) return;
+    if (articleUpdateFrame) {
+      window.cancelAnimationFrame(articleUpdateFrame);
+      articleUpdateFrame = 0;
+      setArticles(sources.flatMap(source => bySource[source.id] || []));
+    }
     if (!succeeded) appendNote('All selected feeds failed. Check your internet connection and try Refresh News. If this keeps happening, the publishers or public CORS relays may be temporarily blocking requests.', true);
     setLoadingMessage('');
     setLoading(false);
