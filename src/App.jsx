@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import NewsGrid from './features/news/components/NewsGrid.jsx';
 import FilterPanel from './features/preferences/FilterPanel.jsx';
 import AppHeader from './components/AppHeader.jsx';
@@ -9,6 +9,8 @@ import { useSavedArticles } from './features/library/useSavedArticles.js';
 import { useNewsFeed } from './features/news/useNewsFeed.js';
 import AuthDialog from './features/auth/components/AuthDialog.jsx';
 import { useAuth } from './features/auth/AuthProvider.jsx';
+
+const CATEGORY_NAV_SCROLL_KEY = 'inh_category_nav_scroll';
 
 /** React owns the application UI and news feed lifecycle. */
 export default function App() {
@@ -22,10 +24,43 @@ export default function App() {
   const [authDialogMode, setAuthDialogMode] = useState('signin');
   const [authDialogPrompt, setAuthDialogPrompt] = useState('');
   const installPrompt = useRef(null);
+  const categoryNavRef = useRef(null);
+  const categoryNavRestored = useRef(false);
   const auth = useAuth();
   const library = useSavedArticles(auth);
   const { savedArticles } = library;
   const feed = useNewsFeed(preferences, search, savedArticles);
+
+  useLayoutEffect(() => {
+    const nav = categoryNavRef.current;
+    if (!nav || !feed.categoryNav.length || categoryNavRestored.current) return;
+    try {
+      const savedScroll = Number(window.sessionStorage.getItem(CATEGORY_NAV_SCROLL_KEY));
+      if (Number.isFinite(savedScroll)) nav.scrollLeft = savedScroll;
+    } catch {
+      // Session storage can be unavailable in restricted browser contexts.
+    }
+    categoryNavRestored.current = true;
+  }, [feed.categoryNav.length]);
+
+  useEffect(() => {
+    const nav = categoryNavRef.current;
+    if (!nav) return undefined;
+    const saveScroll = () => {
+      try {
+        window.sessionStorage.setItem(CATEGORY_NAV_SCROLL_KEY, String(nav.scrollLeft));
+      } catch {
+        // Session storage can be unavailable in restricted browser contexts.
+      }
+    };
+    nav.addEventListener('scroll', saveScroll, { passive: true });
+    window.addEventListener('pagehide', saveScroll);
+    return () => {
+      saveScroll();
+      nav.removeEventListener('scroll', saveScroll);
+      window.removeEventListener('pagehide', saveScroll);
+    };
+  }, []);
 
   const closeAuthDialog = useCallback(() => {
     setAuthDialogOpen(false);
@@ -184,7 +219,7 @@ export default function App() {
           <span>Last updated: <b>{feed.feedStatus.updated}</b></span>
         </div>
         <div className="category-bar ui" hidden={!feed.categoryNav.length}>
-          <nav className="category-nav" aria-label="Browse news categories">
+          <nav className="category-nav" aria-label="Browse news categories" ref={categoryNavRef}>
             {feed.categoryNav.map(button => (
               <button
                 className="category-pill"
@@ -216,6 +251,7 @@ export default function App() {
             canSave={Boolean(auth.user)}
             onSave={auth.user ? library.saveArticle : undefined}
             onRequireLogin={requireLogin}
+            onRefresh={refreshNews}
           />
         </div>
       </main>
