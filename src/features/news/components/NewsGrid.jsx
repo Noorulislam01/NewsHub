@@ -79,8 +79,9 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
           </span>
         </label>
         <div className="pagination-controls">
-          <button className="btn pagination-button" type="button" disabled={currentPage <= 1} onClick={() => changePage(currentPage - 1)} aria-label="Previous page">
-            Previous
+          <button className="btn pagination-button pagination-prev" type="button" disabled={currentPage <= 1} onClick={() => changePage(currentPage - 1)} aria-label="Previous page">
+            <span className="pagination-arrow" aria-hidden="true">‹</span>
+            <span className="pagination-button-label">Previous</span>
           </button>
           {Array.from({ length: lastPage - firstPage + 1 }, (_, index) => firstPage + index).map(pageNumber => (
             <button
@@ -94,8 +95,9 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
               {pageNumber}
             </button>
           ))}
-          <button className="btn pagination-button" type="button" disabled={currentPage >= pageCount} onClick={() => changePage(currentPage + 1)} aria-label="Next page">
-            Next
+          <button className="btn pagination-button pagination-next" type="button" disabled={currentPage >= pageCount} onClick={() => changePage(currentPage + 1)} aria-label="Next page">
+            <span className="pagination-button-label">Next</span>
+            <span className="pagination-arrow" aria-hidden="true">›</span>
           </button>
         </div>
         <span className="pagination-status" aria-live="polite">Page {currentPage} of {pageCount}</span>
