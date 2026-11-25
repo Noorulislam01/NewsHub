@@ -91,7 +91,11 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
                 <div className="menu-account-details" id="menuAccountDetails">
                   <div className="menu-account" role="status">{authUser.email || 'Signed in'}</div>
                   <button type="button" className="menu-account-signout" onClick={() => selectMenuAction('signout')}>
-                    <span className="menu-symbol">&#x21AA;</span>Sign out
+                    <svg className="menu-signout-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M10 17l5-5-5-5M15 12H3" />
+                      <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
+                    </svg>
+                    Sign out
                   </button>
                 </div>
               )}
