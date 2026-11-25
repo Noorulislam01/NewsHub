@@ -51,7 +51,12 @@ function fetchFirst(feed){
 }
 function parseFeed(xml){
   const doc=new DOMParser().parseFromString(xml,'text/xml');
-  if(doc.querySelector('parsererror')||!doc.querySelector('item,entry'))throw new Error('Not a valid RSS/Atom feed');
+  if(doc.querySelector('parsererror'))throw new Error('Not a valid RSS/Atom feed');
+  // RSS/Atom can be valid even when there are no items for the current search.
+  if(!doc.querySelector('item,entry')){
+    if(doc.querySelector('rss,feed,rdf\\:RDF'))return [];
+    throw new Error('Not a valid RSS/Atom feed');
+  }
   const txt=(n,t)=>{const e=n.getElementsByTagName(t)[0];return e?e.textContent.trim():''};
   const plain=h=>{const d=new DOMParser().parseFromString(h||'','text/html');return(d.body.textContent||'').replace(/\s+/g,' ').trim()};
   return [...doc.querySelectorAll('item,entry')].map(n=>{
@@ -113,7 +118,7 @@ async function loadSource(src,force){
     return{items};
   }
   if(prior.length)return{items:prior,stale:true,err:errors.join(' | ')};
-  throw new Error(errors.join(' | ')||'No dated stories were returned');
+  throw new Error(errors.join(' | ')||'No recent stories were returned. The publisher feed may be stale, or the search feed may have no matching articles in the selected date range.');
 }
 
   return { loadSource };
