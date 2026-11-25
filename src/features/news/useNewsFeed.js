@@ -5,6 +5,7 @@ import { CATEGORIES, SOURCES } from './newsSources.js';
 import { storage } from '../../shared/storage.js';
 
 const STOP_WORDS = new Set('the a an of to in on for and or at by with is are was be as from after over says said new how why what who will its it this that into amid'.split(' '));
+const ACTIVE_CATEGORY_KEY = 'inh_active_category';
 const cache = storage;
 
 function tokens(title) {
@@ -71,11 +72,21 @@ export function useNewsFeed(preferences, search, savedArticles) {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [notes, setNotes] = useState([]);
   const [feedStatus, setFeedStatus] = useState({ loaded: '0', updated: 'never' });
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const saved = storage.get(ACTIVE_CATEGORY_KEY, null);
+    const selectedCategories = preferences.cats.filter(category => category !== 'All News');
+    return CATEGORIES.includes(saved) && (!selectedCategories.length || selectedCategories.includes(saved))
+      ? saved
+      : null;
+  });
   const [showingSaved, setShowingSaved] = useState(false);
 
   preferencesRef.current = preferences;
   newsService.current ||= createNewsService({ cache, getRange: () => preferencesRef.current.range });
+
+  useEffect(() => {
+    storage.set(ACTIVE_CATEGORY_KEY, activeCategory);
+  }, [activeCategory]);
 
   const reload = useCallback(async (force = false, nextPreferences) => {
     const id = ++requestId.current;
@@ -87,7 +98,6 @@ export function useNewsFeed(preferences, search, savedArticles) {
     setNotes([]);
     setLoading(true);
     setLoadingMessage('');
-    setActiveCategory(null);
 
     const appendNote = (message, info = false) => setNotes(current => [...current, { id: `${Date.now()}-${Math.random()}`, message, info }]);
     const updateArticles = () => setArticles(sources.flatMap(source => bySource[source.id] || []));
