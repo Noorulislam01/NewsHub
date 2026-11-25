@@ -5,7 +5,7 @@ export const SOURCES=[
  {id:'toi',name:'Times of India',feeds:['https://timesofindia.indiatimes.com/rssfeedstopstories.cms']},
  {id:'wire',name:'The Wire',searchHost:'thewire.in',feeds:['https://cms.thewire.in/feed','https://thewire.in/feed/']},
  {id:'maktoob',name:'Maktoob Media',searchHost:'maktoobmedia.com',feeds:['https://maktoobmedia.com/rss']},
- {id:'muslimmirror',name:'Muslim Mirror',searchHost:'muslimmirror.com',searchOnly:true,feeds:[]},
+ {id:'muslimmirror',name:'Muslim Mirror',searchHost:'muslimmirror.com',searchOnly:true,feeds:['https://muslimmirror.com/feed/']},
  {id:'twocircles',name:'TwoCircles',searchHost:'twocircles.net',feeds:['https://twocircles.net/feed']},
  {id:'millattimes',name:'Millat Times',searchHost:'millattimes.com',feeds:['https://millattimes.com/feed/']},
  {id:'clarion',name:'Clarion India',searchHost:'clarionindia.net',feeds:['https://clarionindia.net/feed/']},

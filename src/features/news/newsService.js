@@ -88,7 +88,7 @@ async function loadSource(src,force){
   const days=range==='latest'?2:Math.max(1,Math.ceil(Number(range)/24));
   const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:'+days+'d')+'&hl=en-IN&gl=IN&ceid=IN:en';
   const includeSearch=range!=='latest'||src.searchOnly;
-  const publisherFeeds=src.searchOnly?[]:src.feeds.slice(0,MAX_FEEDS_TRIED);
+  const publisherFeeds=src.feeds.slice(0,MAX_FEEDS_TRIED);
   const jobs=[...publisherFeeds.map(feed=>fetchFirst(feed)),...(includeSearch?[fetchFirst(gn)]:[])];
   const results=await Promise.allSettled(jobs);
   results.forEach((result,i)=>{
