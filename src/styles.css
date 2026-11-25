@@ -69,17 +69,19 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .pagination-button.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .pagination-button:disabled{opacity:.48;cursor:not-allowed}
 .pagination-status{color:var(--mute);font-size:.9rem;white-space:nowrap}
+.pagination-mobile-label{display:none}
 @media(max-width:600px){
-  .pagination{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 8px;align-items:center;padding:12px 0 18px}
-  .pagination-size{gap:7px;margin:0;font-size:.84rem;white-space:nowrap}
+  .pagination{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:center;padding:12px 0 18px}
+  .pagination-size{grid-column:1;justify-self:center;gap:7px;margin:0;font-size:.84rem;white-space:nowrap}
   .pagination-size select{height:40px;min-height:40px;padding-left:10px}
-  .pagination-status{font-size:.82rem}
-  .pagination-controls{grid-column:1/-1;order:initial;width:100%;display:grid;grid-template-columns:minmax(52px,1fr) 42px minmax(52px,1fr);gap:8px}
-  .pagination-button{min-width:0;min-height:44px;padding:8px 10px}
-  .pagination-button:not(.active):not(.pagination-prev):not(.pagination-next){display:none}
-  .pagination-prev,.pagination-next{display:flex;align-items:center;justify-content:center;gap:6px}
-  .pagination-arrow{display:inline;line-height:1;font:24px/1 system-ui,sans-serif}
-  .pagination-button-label{font-size:.86rem}
+  .pagination-status{justify-self:center;font-size:.82rem}
+  .pagination-controls{grid-column:1;width:100%;display:flex;align-items:center;justify-content:center;gap:4px}
+  .pagination-button{min-width:34px;min-height:38px;padding:6px 8px;font-size:.84rem}
+  .pagination-prev,.pagination-next{display:flex;align-items:center;justify-content:center;gap:3px;min-width:52px;padding:6px 7px}
+  .pagination-arrow{display:inline;line-height:1;font:17px/1 system-ui,sans-serif}
+  .pagination-button-label{font-size:.78rem}
+  .pagination-desktop-label{display:none}
+  .pagination-mobile-label{display:inline}
 }
 .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .card[data-link]{cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;transition:transform .12s ease}

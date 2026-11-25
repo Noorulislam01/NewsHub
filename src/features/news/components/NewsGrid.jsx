@@ -81,7 +81,8 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
         <div className="pagination-controls">
           <button className="btn pagination-button pagination-prev" type="button" disabled={currentPage <= 1} onClick={() => changePage(currentPage - 1)} aria-label="Previous page">
             <span className="pagination-arrow" aria-hidden="true">‹</span>
-            <span className="pagination-button-label">Previous</span>
+            <span className="pagination-button-label pagination-desktop-label">Previous</span>
+            <span className="pagination-button-label pagination-mobile-label">Prev</span>
           </button>
           {Array.from({ length: lastPage - firstPage + 1 }, (_, index) => firstPage + index).map(pageNumber => (
             <button
