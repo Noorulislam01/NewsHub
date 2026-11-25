@@ -63,15 +63,20 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
       <nav className="pagination" aria-label="News article pages">
         <label className="pagination-size">
           <span>Articles per page</span>
-          <select
-            value={pageSize}
-            onChange={event => {
-              setPageSize(Number(event.target.value));
-              setPage(1);
-            }}
-          >
-            {PAGE_SIZE_OPTIONS.map(size => <option key={size} value={size}>{size}</option>)}
-          </select>
+          <span className="pagination-select-wrap">
+            <select
+              value={pageSize}
+              onChange={event => {
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map(size => <option key={size} value={size}>{size}</option>)}
+            </select>
+            <svg className="pagination-select-arrow" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="m4 6 4 4 4-4" />
+            </svg>
+          </span>
         </label>
         <div className="pagination-controls">
           <button className="btn pagination-button" type="button" disabled={currentPage <= 1} onClick={() => changePage(currentPage - 1)} aria-label="Previous page">
