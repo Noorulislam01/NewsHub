@@ -65,7 +65,7 @@ export default function FilterPanel({ open, preferences, newspapers, categories,
       <select
         value={preferences.range}
         aria-label="Date range"
-        onChange={event => onChange({ ...preferences, range: event.target.value }, { reload: true })}
+        onChange={event => onChange({ ...preferences, range: event.target.value })}
       >
         <option value="latest">Latest News</option>
         <option value="24">Last 24 Hours</option>

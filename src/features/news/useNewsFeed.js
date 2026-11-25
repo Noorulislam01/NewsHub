@@ -152,7 +152,27 @@ export function useNewsFeed(preferences, search, savedArticles) {
     activeRef.current = true;
     if (!initialLoadStarted.current) {
       initialLoadStarted.current = true;
-      reload(false);
+      const sources = SOURCES.filter(source => preferencesRef.current.papers.includes(source.id));
+      let cachedSources = 0;
+      let mostRecentCache = 0;
+      const cachedArticles = sources.flatMap(source => {
+        const previous = cache.get(`inh_c_${source.id}`, null);
+        if (!Array.isArray(previous?.items)) return [];
+        cachedSources++;
+        mostRecentCache = Math.max(mostRecentCache, Number(previous.t) || 0);
+        return previous.items.map(article => ({
+          ...article,
+          pid: source.id,
+          pub: source.name,
+          cats: classifyArticle(article)
+        }));
+      });
+      setArticles(cachedArticles);
+      setFeedStatus({
+        loaded: `${cachedSources}/${sources.length}`,
+        updated: mostRecentCache ? new Date(mostRecentCache).toLocaleTimeString('en-IN') : 'never'
+      });
+      setLoading(false);
     }
     return () => { activeRef.current = false; };
   }, [reload]);

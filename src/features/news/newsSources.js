@@ -4,10 +4,26 @@ export const SOURCES=[
  {id:'ie',name:'The Indian Express',feeds:['https://indianexpress.com/feed/','https://indianexpress.com/rss/']},
  {id:'toi',name:'Times of India',feeds:['https://timesofindia.indiatimes.com/rssfeedstopstories.cms']},
  {id:'wire',name:'The Wire',searchHost:'thewire.in',feeds:['https://cms.thewire.in/feed','https://thewire.in/feed/']},
+ {id:'maktoob',name:'Maktoob Media',searchHost:'maktoobmedia.com',feeds:['https://maktoobmedia.com/rss']},
+ {id:'muslimmirror',name:'Muslim Mirror',searchHost:'muslimmirror.com',searchOnly:true,feeds:[]},
+ {id:'twocircles',name:'TwoCircles',searchHost:'twocircles.net',feeds:['https://twocircles.net/feed']},
+ {id:'millattimes',name:'Millat Times',searchHost:'millattimes.com',feeds:['https://millattimes.com/feed/']},
+ {id:'clarion',name:'Clarion India',searchHost:'clarionindia.net',feeds:['https://clarionindia.net/feed/']},
+ {id:'indiatomorrow',name:'India Tomorrow',searchHost:'indiatomorrow.net',feeds:['https://indiatomorrow.net/feed/']},
+ {id:'ummid',name:'Ummid',searchHost:'ummid.com',searchOnly:true,feeds:[]},
+ {id:'siasat',name:'Siasat Daily',searchHost:'siasat.com',searchOnly:true,feeds:[]},
+ {id:'milligazette',name:'The Milli Gazette',searchHost:'milligazette.com',feeds:['https://www.milligazette.com/rss/news.rss']},
+ {id:'munsif',name:'Munsif Daily',searchHost:'munsifdaily.com',feeds:['https://munsifdaily.com/feed/']},
+ {id:'aawaz',name:'Awaaz The Voice',searchHost:'theaawaz.com',searchOnly:true,feeds:[]},
  {id:'ndtv',name:'NDTV',searchHost:'ndtv.com',feeds:['https://feeds.feedburner.com/ndtvnews-latest']},
  {id:'it',name:'India Today',feeds:['https://www.indiatoday.in/rss/1206578']},
  {id:'print',name:'The Print',feeds:['https://theprint.in/feed/','https://theprint.in/category/india/feed/','https://theprint.in/category/politics/feed/','https://theprint.in/category/economy/feed/']},
+ {id:'quint',name:'The Quint',searchHost:'thequint.com',searchOnly:true,feeds:[]},
  {id:'scroll',name:'Scroll.in',searchHost:'scroll.in',feeds:['https://feeds.feedburner.com/ScrollinArticles.rss']},
+ {id:'newslaundry',name:'Newslaundry',searchHost:'newslaundry.com',feeds:['https://www.newslaundry.com/stories.rss?time-period=last-7-days&exclude-section-ids=15848,15817']},
+ {id:'thenewsminute',name:'The News Minute',searchHost:'thenewsminute.com',feeds:['https://www.thenewsminute.com/stories.rss']},
+ {id:'caravan',name:'The Caravan',searchHost:'caravanmagazine.in',searchOnly:true,feeds:[]},
+ {id:'newsclick',name:'NewsClick',searchHost:'newsclick.in',searchOnly:true,feeds:[]},
  {id:'tnie',name:'New Indian Express',feeds:['https://www.newindianexpress.com/feed','https://www.newindianexpress.com/Nation/rssfeed/?id=170&getXmlFeed=true','https://www.newindianexpress.com/rssfeed/','https://www.newindianexpress.com/rss']},
  {id:'dh',name:'Deccan Herald',feeds:['https://www.deccanherald.com/feed','https://www.deccanherald.com/rss-feed/','https://www.deccanherald.com/rss-feed/india']},
  {id:'tribune',name:'The Tribune',feeds:['https://publish.tribuneindia.com/newscategory/nation/feed/','https://publish.tribuneindia.com/newscategory/india/feed/','https://www.tribuneindia.com/rss/feed?catId=1']},
@@ -33,7 +49,7 @@ export const SOURCES=[
 export const NEW_RESEARCH_SOURCE_IDS=['sciencedaily','medicalxpress','stat','thescientist','nature'];
 export const DEFAULT_PAPERS=['ht','hindu','ie','toi','ndtv','it','orf','cfr','techcrunch','verge','wired','mittr','ars',...NEW_RESEARCH_SOURCE_IDS];
 
-export const CATEGORIES=['All News','Politics','National','International','Opinion','Explained','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
+export const CATEGORIES=['All News','Politics','National','International','Opinion','Explained','Business','Economy','Technology','Artificial Intelligence','Science','Education','Sports','Cricket','Entertainment','Bollywood','Health','Muslims','Lifestyle','Environment','Crime','Government & Policies','Startups','Automobile','Agriculture'];
 /* Keyword rules use word boundaries. Publisher section labels take priority when they map to an app category. */
 export const RULES={
  'Politics':/\b(bjp|congress|aap|tmc|lok sabha|rajya sabha|election|poll|mla|mp|minister|chief minister|opposition|parliament|assembly|party)\b/i,
@@ -51,6 +67,7 @@ export const RULES={
  'Entertainment':/\b(film|movie|series|ott|netflix|actor|actress|box office|trailer|album|singer|web series)\b/i,
  'Bollywood':/\b(bollywood|shah rukh|salman khan|aamir|deepika|alia bhatt|ranveer|akshay kumar|hindi film)\b/i,
  'Health':/\b(health|hospital|doctor|disease|virus|vaccine|cancer|diabetes|covid|medical|who|icmr|dengue)\b/i,
+ 'Muslims':/\b(muslim|muslims|islam|islamic|mosque|masjid|imam|madrasa|madrasah|eid|ramadan|ramzan|hijab|burqa|halal|quran|koran|hajj|umrah)\b/i,
  'Lifestyle':/\b(lifestyle|fashion|travel|recipe|wellness|fitness|diet|relationship|festival|wedding)\b/i,
  'Environment':/\b(pollution|climate|aqi|air quality|wildlife|forest|flood|monsoon|emission|global warming|biodiversity)\b/i,
  'Crime':/\b(murder|arrested|arrest|police|rape|fir|theft|robbery|killed|accused|cbi|ed|court|scam|fraud)\b/i,

@@ -10,6 +10,8 @@ export function createNewsService({ cache, getRange }) {
 // Paste your Cloudflare Worker URL here, e.g. 'https://news-proxy.yourname.workers.dev/'
 const WORKER_URL='https://sparkling-glade-bb6d.webmiscuser.workers.dev/';
 if(WORKER_URL)PROXY_BUILDERS.unshift(feed=>WORKER_URL+(WORKER_URL.includes('?')?'':'?')+'url='+encodeURIComponent(feed));
+// Vercel serves this same-origin endpoint without browser CORS restrictions.
+if(typeof window!=='undefined')PROXY_BUILDERS.unshift(feed=>'/api/news-feed?url='+encodeURIComponent(feed));
 const DIRECT_TIMEOUT_MS=4000, PROXY_TIMEOUT_MS=9000, STAGGER_MS=600, MAX_FEEDS_TRIED=2;
 const CACHE_TTL=10*60*1000, HISTORY_TTL=7*24*60*60*1000;
 
@@ -62,7 +64,8 @@ function parseFeed(xml){
     if(m)img=m.getAttribute('url')||'';
     if(!img){const en=n.getElementsByTagName('enclosure')[0];if(en&&/image/.test(en.getAttribute('type')||''))img=en.getAttribute('url')||''}
     if(!img){const g=(enc||raw).match(/<img[^>]+src=["']([^"']+)/i);if(g)img=g[1]}
-    const ds=txt(n,'pubDate')||txt(n,'published')||txt(n,'updated')||txt(n,'dc:date');
+    const dateFields=[...n.getElementsByTagName('*')].filter(e=>['pubdate','published','updated','date','created','issued'].includes((e.localName||e.nodeName.split(':').pop()).toLowerCase()));
+    const ds=txt(n,'pubDate')||txt(n,'published')||txt(n,'updated')||txt(n,'dc:date')||dateFields[0]?.textContent?.trim()||'';
     const t=ds?Date.parse(ds):NaN;
     const rssCats=[...n.getElementsByTagNameNS('*','category'),...n.getElementsByTagNameNS('*','subject')]
       .map(c=>(c.getAttribute('term')||c.getAttribute('label')||c.textContent||'').trim()).filter(Boolean);
@@ -74,13 +77,14 @@ async function loadSource(src,force){
   const range=getRange(),key='inh_c_'+src.id,c=cache.get(key,null),now=Date.now();
   if(!force&&c&&c.searchRange===range&&now-c.t<CACHE_TTL)return{items:c.items,cached:true};
   const errors=[],fresh=[];
-  // Publisher RSS is enough for Latest News. Only query Google News when the user
-  // explicitly asks for a wider history, to avoid extra relay traffic on normal loads.
-  const host=src.searchHost||new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,'');
+  // For publisher feeds, Google News is added for wider history. Search-only sources
+  // use it in Latest News too because they do not expose a usable RSS feed.
+  const host=src.searchHost||(src.feeds[0]?new URL(src.feeds[0]).hostname.replace(/^(www|publish)\./,''):'');
   const days=range==='latest'?2:Math.max(1,Math.ceil(Number(range)/24));
   const gn='https://news.google.com/rss/search?q='+encodeURIComponent('site:'+host+' when:'+days+'d')+'&hl=en-IN&gl=IN&ceid=IN:en';
-  const includeSearch=range!=='latest';
-  const jobs=[...src.feeds.slice(0,MAX_FEEDS_TRIED).map(feed=>fetchFirst(feed)),...(includeSearch?[fetchFirst(gn)]:[])];
+  const includeSearch=range!=='latest'||src.searchOnly;
+  const publisherFeeds=src.searchOnly?[]:src.feeds.slice(0,MAX_FEEDS_TRIED);
+  const jobs=[...publisherFeeds.map(feed=>fetchFirst(feed)),...(includeSearch?[fetchFirst(gn)]:[])];
   const results=await Promise.allSettled(jobs);
   results.forEach((result,i)=>{
     if(result.status!=='fulfilled'){
@@ -94,7 +98,9 @@ async function loadSource(src,force){
   // Merge with the rolling seven-day cache so changing from 24/48 hours to a week
   // does not lose headlines that an earlier fetch already found.
   const prior=Array.isArray(c?.items)?c.items:[];
-  const recent=[...prior,...fresh].filter(a=>a.date&&a.date<=now+60*60*1000&&now-a.date<=HISTORY_TTL);
+  const recent=[...prior,...fresh].filter(a=>a.date
+    ? a.date<=now+60*60*1000&&now-a.date<=HISTORY_TTL
+    : range==='latest');
   const seen=new Set(),items=[];
   for(const a of recent.sort((x,y)=>(y.date||0)-(x.date||0))){
     const title=(a.title||'').toLowerCase().replace(/\s+-\s+[^-]+$/,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();

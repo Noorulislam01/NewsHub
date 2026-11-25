@@ -4,6 +4,9 @@
   "functions": {
     "api/summarize.mjs": {
       "maxDuration": 60
+    },
+    "api/news-feed.mjs": {
+      "maxDuration": 10
     }
   }
 }

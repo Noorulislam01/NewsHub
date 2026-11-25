@@ -20,6 +20,7 @@ export function classifyArticle(a){
     'Sports':['sport'],
     'Entertainment':['movies','film','television','tv'],
     'Health':['healthcare','medicine'],
+    'Muslims':['muslim','islam','islamic','muslim affairs','islamic affairs'],
     'Lifestyle':['life style','fashion','travel'],
     'Environment':['climate','weather','nature'],
     'Crime':['law enforcement'],
@@ -44,6 +45,9 @@ export function classifyArticle(a){
     for(const[k,r]of Object.entries(RULES))if(r.test(hay))hits.push(k);
     if(!hits.length&&NATIONAL.test(a.title||''))hits.push('National');
   }
+  // Keep the Muslims topic as an additional tag even when a publisher section
+  // such as Politics or Opinion has already been assigned.
+  if(RULES.Muslims.test(hay)&&!hits.includes('Muslims'))hits.push('Muslims');
   if(hits.includes('Cricket')&&!hits.includes('Sports'))hits.push('Sports');
   if(hits.includes('Bollywood')&&!hits.includes('Entertainment'))hits.push('Entertainment');
   return hits.length?hits:['General'];

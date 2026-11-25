@@ -13,8 +13,10 @@ import { useAuth } from './features/auth/AuthProvider.jsx';
 /** React owns the application UI and news feed lifecycle. */
 export default function App() {
   const [preferences, setPreferences] = useState(loadPreferences);
+  const [draftPreferences, setDraftPreferences] = useState(preferences);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [draftSearch, setDraftSearch] = useState('');
   const [installAvailable, setInstallAvailable] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState('signin');
@@ -69,27 +71,27 @@ export default function App() {
     };
   }, []);
 
-  function changePreferences(next, options = {}) {
-    setPreferences(next);
-    if (options.reload) feed.reload(false, next);
+  function changePreferences(next) {
+    setDraftPreferences(next);
   }
 
   function changeSearch(value) {
-    setSearch(value);
+    setDraftSearch(value);
   }
 
   function clearFilters() {
-    const defaults = { ...preferences, papers: [...DEFAULT_PAPERS], cats: ['All News'], range: 'latest' };
-    changePreferences(defaults, { reload: true });
-    setSearch('');
-    feed.setActiveCategory(null);
+    const defaults = { ...draftPreferences, papers: [...DEFAULT_PAPERS], cats: ['All News'], range: 'latest' };
+    changePreferences(defaults);
+    setDraftSearch('');
   }
 
   function applyFilters() {
     setFiltersOpen(false);
     feed.setShowingSaved(false);
     feed.setActiveCategory(null);
-    feed.reload(false);
+    setPreferences(draftPreferences);
+    setSearch(draftSearch);
+    feed.reload(true, draftPreferences);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -120,6 +122,7 @@ export default function App() {
   function changeTheme(nextTheme) {
     document.documentElement.dataset.theme = nextTheme;
     setPreferences(current => ({ ...current, theme: nextTheme }));
+    setDraftPreferences(current => ({ ...current, theme: nextTheme }));
   }
 
   function refreshNews() {
@@ -163,10 +166,10 @@ export default function App() {
       >
         <FilterPanel
           open={filtersOpen}
-          preferences={preferences}
+          preferences={draftPreferences}
           newspapers={SOURCES}
           categories={CATEGORIES}
-          search={search}
+          search={draftSearch}
           onChange={changePreferences}
           onSearch={changeSearch}
           onShow={applyFilters}
