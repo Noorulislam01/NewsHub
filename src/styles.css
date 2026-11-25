@@ -72,6 +72,11 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .sum-err{color:var(--err)}
 .sum-box[hidden]{display:none}
 .card img{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--chip)}
+.card-image{position:relative;width:100%;line-height:0}
+.card-image .read-article-overlay{position:absolute;top:10px;right:10px;z-index:2;margin:0;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(8px)}
+.read-toast{position:absolute;top:50px;right:10px;z-index:3;padding:7px 11px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:999px;background:color-mix(in srgb,var(--surface) 94%,transparent);color:var(--ink);font:600 .76rem system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.16);animation:read-toast-in .16s ease-out;backdrop-filter:blur(8px)}
+.read-toast-inline{position:static;margin-left:auto;align-self:center}
+@keyframes read-toast-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .card .body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
 .meta{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.78rem;color:var(--mute)}
 .pub{font-weight:700;color:var(--accent)}
@@ -132,6 +137,14 @@ body.filters-open footer.site-footer{margin-top:auto}
 }
 .save-article:hover{border-color:var(--accent);transform:translateY(-1px)}
 .save-article.is-saved{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.read-article{
+  flex:0 0 32px;width:32px;height:32px;margin-left:auto;padding:0;display:grid;place-items:center;
+  border:1px solid var(--line);border-radius:50%;background:var(--chip);color:var(--mute);
+  cursor:pointer;transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.read-article svg{width:17px;height:17px}
+.read-article:hover{color:var(--accent);border-color:var(--accent);transform:translateY(-1px)}
+.read-article.is-read{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 30%,transparent)}
 .saved-count{margin-left:auto;min-width:23px;padding:2px 7px;border-radius:20px;background:var(--chip);color:var(--accent);font-size:.78rem;text-align:center}
 
 /* Compact hamburger navigation */

@@ -6,6 +6,7 @@ import RefreshButton from './components/RefreshButton.jsx';
 import { loadPreferences, savePreferences } from './features/preferences/preferences.js';
 import { CATEGORIES, DEFAULT_PAPERS, SOURCES } from './features/news/newsSources.js';
 import { useSavedArticles } from './features/library/useSavedArticles.js';
+import { useReadArticles } from './features/library/useReadArticles.js';
 import { useNewsFeed } from './features/news/useNewsFeed.js';
 import AuthDialog from './features/auth/components/AuthDialog.jsx';
 import { useAuth } from './features/auth/AuthProvider.jsx';
@@ -28,6 +29,7 @@ export default function App() {
   const categoryNavRestored = useRef(false);
   const auth = useAuth();
   const library = useSavedArticles(auth);
+  const readLibrary = useReadArticles();
   const { savedArticles } = library;
   const feed = useNewsFeed(preferences, search, savedArticles);
 
@@ -248,8 +250,10 @@ export default function App() {
             totalArticles={feed.totalArticles}
             loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}
+            readArticleKeys={readLibrary.readKeys}
             canSave={Boolean(auth.user)}
             onSave={auth.user ? library.saveArticle : undefined}
+            onToggleRead={readLibrary.toggleReadArticle}
             onRequireLogin={requireLogin}
             onRefresh={refreshNews}
           />
