@@ -67,7 +67,7 @@ export const RULES={
  'Entertainment':/\b(film|movie|series|ott|netflix|actor|actress|box office|trailer|album|singer|web series)\b/i,
  'Bollywood':/\b(bollywood|shah rukh|salman khan|aamir|deepika|alia bhatt|ranveer|akshay kumar|hindi film)\b/i,
  'Health':/\b(health|hospital|doctor|disease|virus|vaccine|cancer|diabetes|covid|medical|who|icmr|dengue)\b/i,
- 'Muslims':/\b(muslim|muslims|islam|islamic|mosque|masjid|imam|madrasa|madrasah|eid|ramadan|ramzan|hijab|burqa|halal|quran|koran|hajj|umrah)\b/i,
+ 'Muslims':/\b(muslim(?:s)?(?: personal law board)?|islam|islamic(?: law)?|mosque|masjid|imam|madrasa|madrasah|waqf(?:\s+(?:board|properties))?|aqidah|aqeeda|aqeedah|akidah|shariah?|shariat|jamaat|jamat|jamiat|jamiyat|darul uloom|sunni|shia|shiite|sufi|sufism|azaan|azan|adhaan?|namaz|salah|salat|iftar|suhoor|sehri|karbala|muharram|ashura|minority affairs?|minority communit(?:y|ies)|eid|ramadan|ramzan|hijab|burqa|halal|quran|koran|hajj|umrah)\b/i,
  'Lifestyle':/\b(lifestyle|fashion|travel|recipe|wellness|fitness|diet|relationship|festival|wedding)\b/i,
  'Environment':/\b(pollution|climate|aqi|air quality|wildlife|forest|flood|monsoon|emission|global warming|biodiversity)\b/i,
  'Crime':/\b(murder|arrested|arrest|police|rape|fir|theft|robbery|killed|accused|cbi|ed|court|scam|fraud)\b/i,
