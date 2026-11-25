@@ -39,12 +39,12 @@ export function classifyArticle(a){
     for(const[k,r]of Object.entries(RULES))if(r.test(publisherText)&&!publisherHits.includes(k))publisherHits.push(k);
     if(/\b(national|india|indian|domestic)\b/i.test(publisherText)&&!publisherHits.includes('National'))publisherHits.push('National');
   }
-  const hits=publisherHits.length?publisherHits:[];
+  // Preserve publisher taxonomy and supplement it with topic keywords. A broad
+  // publisher label such as "India" should not hide a clear AI, health, or opinion topic.
+  const hits=[...publisherHits];
   const hay=(a.title||'')+' '+(a.summary||'');
-  if(!hits.length){
-    for(const[k,r]of Object.entries(RULES))if(r.test(hay))hits.push(k);
-    if(!hits.length&&NATIONAL.test(a.title||''))hits.push('National');
-  }
+  for(const[k,r]of Object.entries(RULES))if(r.test(hay)&&!hits.includes(k))hits.push(k);
+  if(!hits.length&&NATIONAL.test(a.title||''))hits.push('National');
   // Keep the Muslims topic as an additional tag even when a publisher section
   // such as Politics or Opinion has already been assigned.
   if(RULES.Muslims.test(hay)&&!hits.includes('Muslims'))hits.push('Muslims');
