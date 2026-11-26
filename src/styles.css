@@ -155,7 +155,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;display:flex;flex-direction:colum
 .card>.save-article-overlay{position:absolute;top:10px;right:10px;z-index:2;margin:0;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(8px)}
 .card-copy{display:flex;flex-direction:column;gap:8px}
 .card.card-no-image .body{padding:10px 10px 14px 14px}
-.card-no-image .card-copy{display:flow-root}
+.card-no-image .card-copy{display:flow-root;padding-top:42px}
 .card-no-image .card-copy>.save-article-icon{float:right;position:static;margin:0 0 6px 10px;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(8px)}
 .card-no-image .card-copy>.save-article-icon.is-saved{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .card-no-image .meta{display:block;margin:0}
@@ -252,7 +252,7 @@ body.filters-open{overflow:hidden}
 
 /* Article actions menu and shared article landing state */
 .article-menu-wrap{position:absolute;top:10px;right:10px;z-index:6;line-height:1}
-.card-no-image .card-copy>.article-menu-wrap{position:relative;top:auto;right:auto;float:right;margin:0 0 6px 10px}
+.card-no-image .card-copy>.article-menu-wrap{position:absolute;top:10px;right:10px;float:none;margin:0}
 .article-menu-trigger{width:36px;height:36px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--ink);box-shadow:0 3px 12px rgba(0,0,0,.18);backdrop-filter:blur(8px);cursor:pointer;transition:color .16s ease,border-color .16s ease,background .16s ease,transform .16s ease}
 .article-menu-trigger:hover,.article-menu-trigger[aria-expanded=true]{color:var(--accent);border-color:var(--accent);transform:translateY(-1px)}
 .article-menu-trigger svg{width:19px;height:19px}
