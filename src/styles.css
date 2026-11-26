@@ -103,6 +103,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .card-copy{display:flex;flex-direction:column;gap:8px}
 .card-no-image .card-copy{display:flow-root}
 .card-no-image .card-copy>.save-article-icon{float:right;position:static;margin:0 0 6px 10px;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(8px)}
+.card-no-image .card-copy>.save-article-icon.is-saved{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .card-no-image .meta{display:block;margin:0}
 .card-no-image .meta>span{margin-right:10px}
 .card-no-image .card-copy>*+*{margin-top:8px}
