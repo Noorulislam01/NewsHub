@@ -250,7 +250,7 @@ export default function App() {
           onClear={clearFilters}
         />
       </AppHeader>
-      <main id="contentMain" className={`${filtersOpen ? 'filters-mode' : ''}${!feed.showingSaved ? ' ask-mode' : ''}`}>
+      <main id="contentMain" className={`${filtersOpen ? 'filters-mode' : ''}${!feed.showingSaved && !filtersOpen ? ' ask-mode' : ''}`}>
         <div className="stats ui">
           <span>Articles: <b>{feed.showingSaved ? savedArticles.length : feed.groups.length}</b></span>
           <span>Newspapers selected: <b>{preferences.papers.length}</b></span>
@@ -300,12 +300,12 @@ export default function App() {
           />
         </div>
       </main>
-      <div className={`floating-news-tools${!feed.showingSaved ? ' has-ask' : ''}`}>
-        {!feed.showingSaved && (
+      {!feed.showingSaved && !filtersOpen && (
+        <div className="floating-news-tools has-ask">
           <BriefingAsk key={activeChat?.id || `new-chat-${chatSession}`} groups={feed.groups} canAsk={Boolean(auth.user)} onRequireLogin={requireLogin} savedChat={activeChat} onSaveChat={chats.saveChat} onOpenSource={openChatSource} onNewChat={startNewChat} />
-        )}
-        <RefreshButton refreshing={feed.loading} onRefresh={refreshNews} />
-      </div>
+          <RefreshButton refreshing={feed.loading} onRefresh={refreshNews} />
+        </div>
+      )}
       <footer className="site-footer ui">
         <div className="footer-inner">
           <div className="footer-copy">
