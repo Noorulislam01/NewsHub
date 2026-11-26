@@ -519,7 +519,6 @@ body.filters-open{overflow:hidden}
 .briefing-ask-page .briefing-answer-inline>.briefing-chat-turn:first-child{margin-top:auto}
 .briefing-ask-page .briefing-chat-question{max-width:min(88%,680px);padding:10px 14px;background:var(--chip)}
 .briefing-ask-page .briefing-chat-response{max-width:min(100%,760px);padding:12px 14px;border-color:transparent;background:transparent}
-.briefing-ask-page .briefing-chat-turn:last-child .briefing-chat-response{max-width:min(calc(100% - 64px),760px)}
 .briefing-ask-page .briefing-ask-form{position:fixed;z-index:40;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));width:min(900px,calc(100vw - 32px));margin:0;transform:translateX(-50%)}
 @keyframes askHistoryIn{from{opacity:.7;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
 @media(max-width:520px){.bottom-navigation-shell{padding-right:8px;padding-left:8px}.bottom-navigation{gap:2px}.bottom-tab{min-height:50px;font-size:.68rem}main{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}.ask-tab-mode{padding:10px 12px calc(86px + env(safe-area-inset-bottom,0px))}.briefing-ask-page .briefing-ask-form{bottom:calc(86px + env(safe-area-inset-bottom,0px));width:calc(100vw - 24px)}.ask-news-new-chat-button{bottom:calc(100% + 14px);width:48px;height:48px}.ask-chat-history{width:min(340px,88vw);padding:16px 12px}.briefing-ask-page .briefing-chat-question{max-width:94%}}
