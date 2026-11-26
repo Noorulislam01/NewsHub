@@ -310,7 +310,7 @@ body.filters-open footer.site-footer{margin-top:auto}
 .menu-panel button.menu-chat-item{justify-content:space-between;gap:8px;padding:8px;border-radius:8px;font-size:.84rem}
 .menu-chat-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .menu-chat-item small{flex:none;color:var(--mute);font-size:.72rem;font-weight:500}
-.menu-panel:has(.menu-chat-section){width:min(300px,calc(100vw - 32px))}
+.menu-panel:has(.menu-chat-section){width:min(220px,calc(100vw - 32px))}
 .menu-chat-section{margin-top:3px;padding-top:6px;border-top:1px solid var(--line)}
 .menu-panel button.menu-chat-section-toggle{min-height:44px;gap:10px;padding:9px 10px;background:var(--chip);font-weight:700}
 .menu-chat-section-toggle[aria-expanded="true"]{color:var(--accent)}
@@ -329,7 +329,7 @@ body.filters-open footer.site-footer{margin-top:auto}
 .briefing-chat-save-state.is-error{color:var(--err)}
 .briefing-answer-save-retry{padding:4px 7px;border:1px solid var(--line);border-radius:7px;background:var(--chip);color:var(--accent);font:600 .72rem system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
 .briefing-answer-save-retry:disabled{opacity:.6;cursor:progress}
-@media(max-width:700px){.menu-panel:has(.menu-chat-section){width:min(300px,calc(100vw - 24px))}}
+@media(max-width:700px){.menu-panel:has(.menu-chat-section){width:min(220px,calc(100vw - 24px))}}
 @keyframes menuIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){
   .bar{gap:9px}
