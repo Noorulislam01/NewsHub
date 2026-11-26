@@ -29,22 +29,25 @@ function RelatedPublishers({ articles }) {
   );
 }
 
-function ReadStatusButton({ read, onToggle }) {
+function SaveArticleButton({ saved, onClick }) {
   return (
     <button
-      className={`read-article${read ? ' is-read' : ''}`}
+      className={`save-article-button${saved ? ' is-saved' : ''}`}
       type="button"
-      aria-pressed={Boolean(read)}
-      aria-label={read ? 'Mark this article unread' : 'Mark this article read'}
-      title={read ? 'Mark as unread' : 'Mark as read'}
-      onClick={onToggle}
+      aria-pressed={Boolean(saved)}
+      aria-label={saved ? 'Remove article from Library' : 'Save article to Library'}
+      title={saved ? 'Remove from Library' : 'Save to Library'}
+      onClick={onClick}
     >
-      <span>{read ? 'Unread' : 'Read'}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />
+      </svg>
+      <span>{saved ? 'Saved' : 'Save'}</span>
     </button>
   );
 }
 
-function ArticleMenu({ saved, onSave, onShare }) {
+function ArticleMenu({ read, onToggleRead, onShare }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -80,11 +83,11 @@ function ArticleMenu({ saved, onSave, onShare }) {
       </button>
       {open && (
         <div className="article-menu" role="menu" aria-label="Article actions">
-          <button type="button" role="menuitem" onClick={() => { setOpen(false); onSave(); }}>
+          <button type="button" role="menuitem" onClick={() => { setOpen(false); onToggleRead(); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />
+              <path d="M5 4.5h14v15H5z" /><path d="M8 8h8m-8 4h8m-8 4h5" />
             </svg>
-            <span>{saved ? 'Remove from Library' : 'Save this article'}</span>
+            <span>{read ? 'Mark as unread' : 'Mark as read'}</span>
           </button>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); onShare(); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -120,7 +123,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
       return;
     }
     onToggleRead?.(article);
-    showCardNotice(read ? 'Marked as unread' : 'Marked as read', 'bottom');
+    showCardNotice(read ? 'Marked as unread' : 'Marked as read');
   }
 
   function toggleSaved() {
@@ -129,7 +132,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
       return;
     }
     onSave?.(article);
-    showCardNotice(saved ? 'Removed from your library' : 'Saved to your library');
+    showCardNotice(saved ? 'Removed from your library' : 'Saved to your library', 'bottom');
   }
 
   async function shareArticle() {
@@ -184,12 +187,12 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
       {article.img && !imageFailed && (
         <div className="card-image">
           <img src={article.img} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setImageFailed(true)} />
-          <ArticleMenu saved={canSave && saved} onSave={toggleSaved} onShare={shareArticle} />
+          <ArticleMenu read={canSave && read} onToggleRead={toggleRead} onShare={shareArticle} />
         </div>
       )}
       <div className="body">
         <div className="card-copy">
-          {(!article.img || imageFailed) && <ArticleMenu saved={canSave && saved} onSave={toggleSaved} onShare={shareArticle} />}
+          {(!article.img || imageFailed) && <ArticleMenu read={canSave && read} onToggleRead={toggleRead} onShare={shareArticle} />}
           <div className="meta ui">
             <span className="pub">{article.pub}</span>
             <span>{article.cats?.[0]}</span>
@@ -200,7 +203,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
           {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} />}
         </div>
         <div className="card-actions ui">
-          <ReadStatusButton read={canSave && read} onToggle={toggleRead} />
+          <SaveArticleButton saved={canSave && saved} onClick={toggleSaved} />
           <ArticleSummary article={article} canSummarize={canSave} onRequireLogin={onRequireLogin} />
         </div>
       </div>
