@@ -215,7 +215,12 @@ export default function App() {
       setAskStoryGroup(null);
     }
     if (action === 'home') {
-      restoreHomeScroll.current = activeTab !== 'home';
+      const alreadyOnHome = activeTab === 'home';
+      restoreHomeScroll.current = !alreadyOnHome;
+      if (alreadyOnHome) {
+        homeScrollPosition.current = 0;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       setActiveTab('home');
       setFiltersOpen(false);
       feed.setShowingSaved(false);
