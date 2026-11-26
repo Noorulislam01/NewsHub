@@ -1,10 +1,11 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import newsFeed from './api/news-feed.mjs';
+import askNews from './api/ask-news.mjs';
 
 function localApiPlugin() {
   return {
-    name: 'local-news-feed-api',
+    name: 'local-api-routes',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         let url;
@@ -14,7 +15,12 @@ function localApiPlugin() {
           return next();
         }
 
-        if (url.pathname !== '/api/news-feed') return next();
+        const route = url.pathname === '/api/news-feed'
+          ? newsFeed
+          : url.pathname === '/api/ask-news'
+            ? askNews
+            : null;
+        if (!route) return next();
 
         try {
           const headers = new Headers();
@@ -22,8 +28,15 @@ function localApiPlugin() {
             if (value) headers.set(name, Array.isArray(value) ? value.join(', ') : value);
           }
 
-          const request = new Request(url, { method: req.method || 'GET', headers });
-          const response = await newsFeed.fetch(request);
+          const method = req.method || 'GET';
+          let body;
+          if (method !== 'GET' && method !== 'HEAD') {
+            const chunks = [];
+            for await (const chunk of req) chunks.push(chunk);
+            body = Buffer.concat(chunks);
+          }
+          const request = new Request(url, { method, headers, body: body?.length ? body : undefined });
+          const response = await route.fetch(request);
           res.statusCode = response.status;
           response.headers.forEach((value, name) => res.setHeader(name, value));
           res.end(Buffer.from(await response.arrayBuffer()));
@@ -37,7 +50,13 @@ function localApiPlugin() {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), localApiPlugin()],
-  build: { outDir: 'dist' }
+export default defineConfig(({ mode }) => {
+  const localEnv = loadEnv(mode, process.cwd(), '');
+  for (const [key, value] of Object.entries(localEnv)) {
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+  return {
+    plugins: [react(), localApiPlugin()],
+    build: { outDir: 'dist' }
+  };
 });

@@ -6,13 +6,38 @@ const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_BUTTON_COUNT = 5;
 
-export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead }) {
+export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead, focusArticleRequest }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
   }, [resetKey, showingSaved]);
+
+  useEffect(() => {
+    const target = focusArticleRequest?.url;
+    if (!target) return undefined;
+    const index = groups.findIndex(({ main }) => main.link === target);
+    if (index < 0) return undefined;
+    const targetPage = Math.floor(index / pageSize) + 1;
+    if (page !== targetPage) {
+      setPage(targetPage);
+      return undefined;
+    }
+    let frame = 0;
+    let timer = 0;
+    frame = window.requestAnimationFrame(() => {
+      const card = [...document.querySelectorAll('.card[data-link]')].find(item => item.dataset.link === target);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('is-source-target');
+      timer = window.setTimeout(() => card.classList.remove('is-source-target'), 1800);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [focusArticleRequest, groups, page, pageSize]);
 
   if (loading && groups.length === 0) {
     return <>{Array.from({ length: 6 }, (_, index) => <div className="skel" key={index} />)}</>;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import NewsGrid from './features/news/components/NewsGrid.jsx';
+import BriefingAsk from './features/news/components/BriefingAsk.jsx';
 import FilterPanel from './features/preferences/FilterPanel.jsx';
 import AppHeader from './components/AppHeader.jsx';
 import RefreshButton from './components/RefreshButton.jsx';
@@ -7,6 +8,7 @@ import { loadPreferences, savePreferences } from './features/preferences/prefere
 import { CATEGORIES, DEFAULT_PAPERS, SOURCES } from './features/news/newsSources.js';
 import { useSavedArticles } from './features/library/useSavedArticles.js';
 import { useReadArticles } from './features/library/useReadArticles.js';
+import { useSavedChats } from './features/library/useSavedChats.js';
 import { useNewsFeed } from './features/news/useNewsFeed.js';
 import AuthDialog from './features/auth/components/AuthDialog.jsx';
 import { useAuth } from './features/auth/AuthProvider.jsx';
@@ -18,21 +20,24 @@ export default function App() {
   const [preferences, setPreferences] = useState(loadPreferences);
   const [draftPreferences, setDraftPreferences] = useState(preferences);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sourceNavigation, setSourceNavigation] = useState(null);
   const [search, setSearch] = useState('');
   const [draftSearch, setDraftSearch] = useState('');
   const [installAvailable, setInstallAvailable] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState('signin');
   const [authDialogPrompt, setAuthDialogPrompt] = useState('');
+  const [activeChat, setActiveChat] = useState(null);
+  const [chatSession, setChatSession] = useState(0);
   const installPrompt = useRef(null);
   const categoryNavRef = useRef(null);
   const categoryNavRestored = useRef(false);
   const auth = useAuth();
   const library = useSavedArticles(auth);
+  const chats = useSavedChats(auth);
   const readLibrary = useReadArticles();
   const { savedArticles } = library;
   const feed = useNewsFeed(preferences, search, savedArticles);
-
   useLayoutEffect(() => {
     const nav = categoryNavRef.current;
     if (!nav || !feed.categoryNav.length || categoryNavRestored.current) return;
@@ -123,6 +128,7 @@ export default function App() {
   }
 
   function applyFilters() {
+    setSourceNavigation(null);
     setFiltersOpen(false);
     feed.setShowingSaved(false);
     feed.setActiveCategory(null);
@@ -139,6 +145,8 @@ export default function App() {
   }
 
   function navigate(action) {
+    setSourceNavigation(null);
+    if (action !== 'chat') setActiveChat(null);
     if (action === 'home') {
       setFiltersOpen(false);
       feed.setShowingSaved(false);
@@ -164,8 +172,32 @@ export default function App() {
 
   function refreshNews() {
     if (feed.loading) return;
+    setSourceNavigation(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     feed.reload(true);
+  }
+
+  function openChat(chat) {
+    setActiveChat(chat);
+    setFiltersOpen(false);
+    feed.setShowingSaved(false);
+    window.setTimeout(() => document.getElementById('briefingAskTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  }
+
+  function startNewChat() {
+    setActiveChat(null);
+    setChatSession(current => current + 1);
+    setFiltersOpen(false);
+    feed.setShowingSaved(false);
+    window.setTimeout(() => document.getElementById('briefingQuestion')?.focus(), 0);
+  }
+
+  function openChatSource(url) {
+    const isInCurrentFeed = feed.groups.some(({ main }) => main.link === url);
+    if (!isInCurrentFeed) return false;
+    setSourceNavigation({ id: `${Date.now()}-${url}`, url });
+    window.setTimeout(() => document.getElementById('grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+    return true;
   }
 
   async function installApp() {
@@ -183,6 +215,7 @@ export default function App() {
   async function signOut() {
     try {
       await auth.signOut();
+      setActiveChat(null);
       feed.setShowingSaved(false);
     } catch (error) {
       console.error('Could not sign out:', error?.message || error);
@@ -200,6 +233,10 @@ export default function App() {
         onNavigate={navigate}
         onInstall={installApp}
         onSignOut={signOut}
+        savedChats={chats.savedChats}
+        chatsLoading={chats.loading}
+        onOpenChat={openChat}
+        onNewChat={startNewChat}
       >
         <FilterPanel
           open={filtersOpen}
@@ -213,15 +250,15 @@ export default function App() {
           onClear={clearFilters}
         />
       </AppHeader>
-      <main id="contentMain" className={filtersOpen ? 'filters-mode' : ''}>
+      <main id="contentMain" className={`${filtersOpen ? 'filters-mode' : ''}${!feed.showingSaved && feed.groups.length > 0 ? ' ask-mode' : ''}`}>
         <div className="stats ui">
           <span>Articles: <b>{feed.showingSaved ? savedArticles.length : feed.groups.length}</b></span>
           <span>Newspapers selected: <b>{preferences.papers.length}</b></span>
           <span>Feeds loaded: <b>{feed.feedStatus.loaded}</b></span>
           <span>Last updated: <b>{feed.feedStatus.updated}</b></span>
         </div>
-        <div className="category-bar ui" hidden={!feed.categoryNav.length}>
-          <nav className="category-nav" aria-label="Browse news categories" ref={categoryNavRef}>
+        <div className="category-bar ui" hidden={!feed.categoryNav.length || feed.showingSaved}>
+          <nav className="category-nav" aria-label="News views and categories" ref={categoryNavRef}>
             {feed.categoryNav.map(button => (
               <button
                 className="category-pill"
@@ -229,6 +266,7 @@ export default function App() {
                 type="button"
                 aria-pressed={button.active}
                 onClick={() => {
+                  setSourceNavigation(null);
                   feed.setActiveCategory(button.value || null);
                   document.getElementById('grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
@@ -240,6 +278,7 @@ export default function App() {
         </div>
         <div className="notes ui" id="notes" aria-live="polite">
           {library.error && <div className="note" role="alert">{library.error}</div>}
+          {chats.error && <div className="note" role="alert">{chats.error}</div>}
           {feed.loadingMessage && <div className="note info">{feed.loadingMessage}</div>}
           {feed.notes.map(note => <div className={`note${note.info ? ' info' : ''}`} key={note.id}>{note.message}</div>)}
         </div>
@@ -247,7 +286,7 @@ export default function App() {
           <NewsGrid
             groups={feed.showingSaved && library.loading ? [] : feed.groups}
             showingSaved={feed.showingSaved}
-            resetKey={`${feed.activeCategory || ''}|${search}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}`}
+            resetKey={`${feed.activeCategory || ''}|${search}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}`}
             totalArticles={feed.totalArticles}
             loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}
@@ -257,10 +296,16 @@ export default function App() {
             onToggleRead={readLibrary.toggleReadArticle}
             onRequireLogin={requireLogin}
             onRefresh={refreshNews}
+            focusArticleRequest={sourceNavigation}
           />
         </div>
       </main>
-      <RefreshButton refreshing={feed.loading} onRefresh={refreshNews} />
+      <div className={`floating-news-tools${!feed.showingSaved && (feed.groups.length > 0 || activeChat) ? ' has-ask' : ''}`}>
+        {!feed.showingSaved && (feed.groups.length > 0 || activeChat) && (
+          <BriefingAsk key={activeChat?.id || `new-chat-${chatSession}`} groups={feed.groups} canAsk={Boolean(auth.user)} onRequireLogin={requireLogin} savedChat={activeChat} onSaveChat={chats.saveChat} onOpenSource={openChatSource} onNewChat={startNewChat} />
+        )}
+        <RefreshButton refreshing={feed.loading} onRefresh={refreshNews} />
+      </div>
       <footer className="site-footer ui">
         <div className="footer-inner">
           <div className="footer-copy">

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function AppHeader({ theme, savedCount, authUser, installAvailable, onThemeChange, onNavigate, onInstall, onSignOut, children }) {
+export default function AppHeader({ theme, savedCount, authUser, installAvailable, savedChats = [], chatsLoading = false, onOpenChat, onNewChat, onThemeChange, onNavigate, onInstall, onSignOut, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountExpanded, setAccountExpanded] = useState(false);
+  const [chatsExpanded, setChatsExpanded] = useState(false);
   const menuRoot = useRef(null);
   const menuButton = useRef(null);
 
@@ -11,12 +12,14 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
       if (menuRoot.current && !menuRoot.current.contains(event.target)) {
         setMenuOpen(false);
         setAccountExpanded(false);
+        setChatsExpanded(false);
       }
     }
     function closeOnEscape(event) {
       if (event.key === 'Escape' && menuOpen) {
         setMenuOpen(false);
         setAccountExpanded(false);
+        setChatsExpanded(false);
         menuButton.current?.focus();
       }
     }
@@ -31,6 +34,7 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
   function selectMenuAction(action) {
     setMenuOpen(false);
     setAccountExpanded(false);
+    setChatsExpanded(false);
     if (action === 'install') onInstall();
     else if (action === 'signout') onSignOut();
     else onNavigate(action);
@@ -65,7 +69,10 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
               aria-controls="mainMenu"
               title="Menu"
               onClick={() => setMenuOpen(open => {
-                if (open) setAccountExpanded(false);
+                if (open) {
+                  setAccountExpanded(false);
+                  setChatsExpanded(false);
+                }
                 return !open;
               })}
             >
@@ -108,6 +115,26 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
                 </svg>
                 Library <span className="saved-count">{savedCount}</span>
               </button>
+              {authUser && <div className="menu-chat-section">
+                <button type="button" className="menu-chat-section-toggle" aria-expanded={chatsExpanded} aria-controls="savedChatList" onClick={() => setChatsExpanded(value => !value)}>
+                  <svg className="menu-chat-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                    <path d="M5 5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75v7.5A2.75 2.75 0 0 1 16.25 16H10l-5 4v-6.5A2.75 2.75 0 0 1 5 13V5.75Z" />
+                    <path d="M8 8h8M8 11.5h5" />
+                  </svg>
+                  <span>Chats</span><span className="saved-count">{savedChats.length}</span>
+                  <svg className="menu-chat-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+                </button>
+                {chatsExpanded && <div className="menu-chat-history" id="savedChatList">
+                  <button className="menu-chat-new" type="button" onClick={() => { setMenuOpen(false); setChatsExpanded(false); onNewChat?.(); }}>
+                    <span aria-hidden="true">+</span> New chat
+                  </button>
+                  {chatsLoading && <span className="menu-chat-empty">Loading chats…</span>}
+                  {!chatsLoading && !savedChats.length && <span className="menu-chat-empty">Your conversations will appear here after an answer is saved.</span>}
+                  {savedChats.map(chat => <button className="menu-chat-item" key={chat.id} type="button" onClick={() => { setMenuOpen(false); setChatsExpanded(false); onOpenChat?.(chat); }}>
+                    <span>{chat.title || 'News chat'}</span><small>{new Date(chat.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</small>
+                  </button>)}
+                </div>}
+              </div>}
             </nav>
           </div>
         </div>

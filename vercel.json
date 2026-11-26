@@ -7,6 +7,9 @@
     },
     "api/news-feed.mjs": {
       "maxDuration": 10
+    },
+    "api/ask-news.mjs": {
+      "maxDuration": 60
     }
   }
 }
