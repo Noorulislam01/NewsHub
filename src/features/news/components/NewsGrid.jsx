@@ -3,11 +3,12 @@ import NewsCard from './NewsCard.jsx';
 import { articleKey } from '../../../shared/storage.js';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+const DEFAULT_PAGE_SIZE = 20;
 const PAGE_BUTTON_COUNT = 5;
 
 export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead }) {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
