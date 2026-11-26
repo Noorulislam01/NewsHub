@@ -266,12 +266,6 @@ export default function App() {
           <span>Feeds loaded: <b>{feed.feedStatus.loaded}</b></span>
           <span>Last updated: <b>{feed.feedStatus.updated}</b></span>
         </div>
-        {sharedArticle && (
-          <div className="shared-article-banner ui">
-            <span>This article was shared with you. Open the card to visit the publisher.</span>
-            <button type="button" onClick={returnToNews}>Back to news</button>
-          </div>
-        )}
         <div className="category-bar ui" hidden={!feed.categoryNav.length || feed.showingSaved || Boolean(sharedArticle)}>
           <nav className="category-nav" aria-label="News views and categories" ref={categoryNavRef}>
             {feed.categoryNav.map(button => (
@@ -297,7 +291,7 @@ export default function App() {
           {feed.loadingMessage && <div className="note info">{feed.loadingMessage}</div>}
           {feed.notes.map(note => <div className={`note${note.info ? ' info' : ''}`} key={note.id}>{note.message}</div>)}
         </div>
-        <div className="grid" id="grid">
+        <div className={`grid${sharedArticle ? ' shared-article-grid' : ''}`} id="grid">
           <NewsGrid
             groups={sharedArticle ? [{ main: sharedArticle, others: [] }] : (feed.showingSaved && library.loading ? [] : feed.groups)}
             showingSaved={feed.showingSaved}
@@ -313,6 +307,12 @@ export default function App() {
             onRefresh={refreshNews}
             focusArticleRequest={sourceNavigation}
           />
+          {sharedArticle && (
+            <div className="shared-article-banner ui">
+              <span>This article was shared with you. Open the card to visit the publisher.</span>
+              <button type="button" onClick={returnToNews}>Back to news</button>
+            </div>
+          )}
         </div>
       </main>
       {!feed.showingSaved && !filtersOpen && (
