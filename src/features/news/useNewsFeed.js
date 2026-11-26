@@ -9,6 +9,23 @@ const ACTIVE_CATEGORY_KEY = 'inh_active_category';
 const MAX_CONCURRENT_SOURCES = 4;
 const cache = storage;
 
+function getSessionCategory() {
+  try {
+    return window.sessionStorage.getItem(ACTIVE_CATEGORY_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setSessionCategory(category) {
+  try {
+    if (category) window.sessionStorage.setItem(ACTIVE_CATEGORY_KEY, category);
+    else window.sessionStorage.removeItem(ACTIVE_CATEGORY_KEY);
+  } catch {
+    // Keep category selection usable when browser storage is unavailable.
+  }
+}
+
 function tokens(title) {
   return new Set(String(title || '').toLowerCase().replace(/[^a-z0-9\u0900-\u097f ]/g, ' ').split(/\s+/).filter(word => word.length > 2 && !STOP_WORDS.has(word)));
 }
@@ -91,7 +108,7 @@ export function useNewsFeed(preferences, search, savedArticles) {
   const [notes, setNotes] = useState([]);
   const [feedStatus, setFeedStatus] = useState({ loaded: '0', updated: 'never' });
   const [activeCategory, setActiveCategory] = useState(() => {
-    const saved = storage.get(ACTIVE_CATEGORY_KEY, null);
+    const saved = typeof window !== 'undefined' ? getSessionCategory() : null;
     const selectedCategories = preferences.cats.filter(category => category !== 'All News');
     return CATEGORIES.includes(saved) && (!selectedCategories.length || selectedCategories.includes(saved))
       ? saved
@@ -103,7 +120,7 @@ export function useNewsFeed(preferences, search, savedArticles) {
   newsService.current ||= createNewsService({ cache, getRange: () => preferencesRef.current.range });
 
   useEffect(() => {
-    storage.set(ACTIVE_CATEGORY_KEY, activeCategory);
+    setSessionCategory(activeCategory);
   }, [activeCategory]);
 
   const reload = useCallback(async (force = false, nextPreferences) => {
