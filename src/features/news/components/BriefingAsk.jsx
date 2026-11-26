@@ -271,21 +271,17 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
       <form className="briefing-ask-form" onSubmit={handleSubmit}>
         <div className="briefing-composer">
           <label className="sr-only" htmlFor="briefingQuestion">Your question about the news</label>
-          <textarea
+          <input
+            type="text"
             id="briefingQuestion"
             value={question}
             onChange={event => setQuestion(event.target.value)}
             maxLength={500}
-            rows={1}
+            autoComplete="off"
+            enterKeyHint="send"
             placeholder="Ask about news in your current feed..."
-            onKeyDown={event => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
           />
-          <button className={`briefing-ask-submit${status === 'loading' ? ' is-loading' : ''}`} type="submit" aria-label={status === 'loading' ? 'Preparing answer' : 'Ask about the briefing'} title={status === 'loading' ? 'Preparing answer' : 'Ask about the briefing'} aria-busy={status === 'loading'} disabled={status === 'loading' || question.trim().length < 3}>
+          <button className={`briefing-ask-submit${status === 'loading' ? ' is-loading' : ''}`} type="submit" aria-label={status === 'loading' ? 'Preparing answer' : 'Ask about the briefing'} title={status === 'loading' ? 'Preparing answer' : canAsk && !groups.length ? 'Load news before asking' : 'Ask about the briefing'} aria-busy={status === 'loading'} disabled={status === 'loading' || question.trim().length < 3 || (canAsk && !groups.length)}>
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
             </svg>

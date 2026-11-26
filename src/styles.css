@@ -67,8 +67,9 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .briefing-ask-form{margin-top:10px}
 .briefing-composer{display:flex;align-items:center;gap:11px;min-height:60px;padding:8px 10px 8px 17px;border:1px solid var(--line);border-radius:32px;background:var(--surface);box-shadow:0 4px 18px rgba(0,0,0,.09);transition:border-color .16s ease,box-shadow .16s ease}
 .briefing-composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent),0 5px 20px rgba(0,0,0,.1)}
-.briefing-ask-form textarea{flex:1;min-width:0;min-height:36px;max-height:120px;resize:none;padding:8px 0;border:0;outline:0;background:transparent;color:var(--ink);font:400 .95rem/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-.briefing-ask-form textarea::placeholder{color:var(--mute);opacity:.85}
+.briefing-ask-form input{display:block;flex:1;width:0;min-width:0;height:36px;padding:8px 0;border:0;outline:0;background:transparent;color:var(--ink);font:400 .95rem/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;scrollbar-width:none}
+.briefing-ask-form input::-webkit-scrollbar{display:none}
+.briefing-ask-form input::placeholder{color:var(--mute);opacity:.85;white-space:nowrap;text-overflow:ellipsis}
 .briefing-ask-submit{flex:0 0 40px;width:40px;height:40px;padding:0;display:grid;place-items:center;border:0;border-radius:50%;background:var(--accent);color:var(--accent-ink);cursor:pointer;transition:transform .15s ease,opacity .15s ease}
 .briefing-ask-submit:hover:not(:disabled){transform:scale(1.05)}
 .briefing-ask-submit svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -82,7 +83,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
 .briefing-answer-tool{width:30px;height:30px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--chip);color:var(--mute);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease}
 .briefing-answer-tool:hover{border-color:var(--accent);background:var(--surface);color:var(--ink)}
 .briefing-answer-tool svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.briefing-ask-form textarea:focus-visible{outline:0}
+.briefing-ask-form input:focus-visible{outline:0}
 .briefing-ask-state,.briefing-ask-error{margin:10px 0 0;font-size:.86rem}
 .briefing-ask-state{color:var(--mute)}
 .briefing-ask-error{color:var(--err)}
@@ -135,7 +136,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;margin:0 auto;padding:16px}
   .pagination-mobile-label{display:inline}
 }
 @media(max-width:700px){.briefing-ask{left:calc(26px + env(safe-area-inset-left,0px));right:calc(26px + 52px + 10px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));max-width:none}.briefing-answer{left:12px;right:12px;bottom:calc(94px + env(safe-area-inset-bottom,0px))}}
-@media(max-width:600px){.ask-mode{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}.briefing-composer{min-height:56px;padding-left:14px}.briefing-ask-submit{flex-basis:38px;width:38px;height:38px}.briefing-ask-form textarea{font-size:.9rem}}
+@media(max-width:600px){.ask-mode{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}.briefing-composer{min-height:56px;padding-left:14px}.briefing-ask-submit{flex-basis:38px;width:38px;height:38px}.briefing-ask-form input{height:34px;font-size:.9rem}}
 .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .card.is-source-target{animation:source-card-highlight 1.8s ease-out}
 @keyframes source-card-highlight{0%,35%{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 28%,transparent)}100%{border-color:var(--line);box-shadow:none}}
@@ -478,7 +479,7 @@ body.filters-open footer.site-footer{margin-top:auto}
 .floating-news-tools.has-ask .briefing-ask-form{margin:0}
 .floating-news-tools.has-ask .briefing-composer{min-height:52px;padding:6px 4px 6px 2px;border:0;border-radius:0;background:transparent;box-shadow:none;transition:none}
 .floating-news-tools.has-ask .briefing-composer:focus-within{border:0;box-shadow:none}
-.floating-news-tools.has-ask .briefing-ask-form textarea{padding-left:2px}
+.floating-news-tools.has-ask .briefing-ask-form input{padding-left:2px}
 .floating-news-tools.has-ask .refresh-icon{position:static;flex:0 0 48px;width:48px;height:42px;border:0;border-left:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;transform:none}
 .floating-news-tools.has-ask .refresh-icon:hover{border-color:var(--line);background:transparent;color:var(--accent);transform:none}
 .floating-news-tools.has-ask .refresh-icon:active{transform:scale(.94)}
