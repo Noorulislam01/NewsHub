@@ -305,9 +305,9 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
               </svg>
             </button>
           </div>
-          <button className="ask-news-new-chat-button" type="button" onClick={() => onNewChat?.()} aria-label="Start a new chat" title="New chat">
+          {status !== 'loading' && <button className="ask-news-new-chat-button" type="button" onClick={() => onNewChat?.()} aria-label="Start a new chat" title="New chat">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-          </button>
+          </button>}
         </div>
       </form>
       {!pageMode && <p className="briefing-ask-disclaimer">Answers are based on RSS headlines and excerpts, which may not include the full articles.</p>}
