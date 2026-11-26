@@ -90,7 +90,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
       return;
     }
     onSave?.(article);
-    showCardNotice(saved ? 'Removed from your saved articles' : 'Saved to your library');
+    showCardNotice(saved ? 'Removed from your library' : 'Saved to your library');
   }
 
   function openArticle(event) {

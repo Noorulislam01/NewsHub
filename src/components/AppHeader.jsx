@@ -102,7 +102,12 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
               <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
               <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">&#x2637;</span>Filters</button>
               {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">&#x2B07;</span>Install app</button>}
-              <button type="button" onClick={() => selectMenuAction('saved')}><span className="menu-symbol">&#x2605;</span>Saved Articles <span className="saved-count">{savedCount}</span></button>
+              <button type="button" onClick={() => selectMenuAction('saved')}>
+                <svg className="menu-library-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                  <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />
+                </svg>
+                Library <span className="saved-count">{savedCount}</span>
+              </button>
             </nav>
           </div>
         </div>

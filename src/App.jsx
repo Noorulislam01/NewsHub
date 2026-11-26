@@ -149,7 +149,7 @@ export default function App() {
       setFiltersOpen(false);
       feed.setShowingSaved(true);
     } else if (action === 'saved') {
-      requireLogin('Sign in to view your saved articles.');
+      requireLogin('Sign in to view your library.');
     } else if (action === 'account') {
       requireLogin();
     }
