@@ -224,6 +224,7 @@ body.filters-open footer.site-footer{margin-top:auto}
 .summary-control{display:contents}
 .card-actions .sum-box{flex:1 0 100%;width:100%;min-width:0}
 .save-article-button{flex:0 0 auto;min-height:38px;padding:8px 12px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--accent);border-radius:9px;background:transparent;color:var(--accent);font:600 .86rem system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease}
+.save-article-button svg{display:block;width:18px;height:18px;flex:0 0 18px}
 .save-article-button:hover{background:var(--chip);transform:translateY(-1px)}
 .save-article-button.is-saved{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
 .save-article{

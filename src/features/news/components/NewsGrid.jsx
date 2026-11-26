@@ -46,13 +46,17 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
   if (groups.length === 0) {
     const title = showingSaved ? 'Your library is empty' : (totalArticles ? 'No stories match these filters' : 'Your news feed is ready');
     const message = showingSaved
-      ? 'Use the Save button on any news card to add it to your library.'
+      ? 'Use the bookmark button on any news card to add it to your library.'
       : (totalArticles ? 'Clear a filter or widen the date range.' : 'Load the latest headlines to get started. You can choose publishers and sections in Filters.');
     return (
       <div className="empty ui" style={{ gridColumn: '1 / -1' }}>
         <h2>{title}</h2>
         {showingSaved ? (
-          <p className="empty-library-guidance">Use the Save button on any news card to add it to your library.</p>
+          <p className="empty-library-guidance">
+            Use the bookmark button <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />
+            </svg> on any news card to add it to your library.
+          </p>
         ) : <p>{message}</p>}
         {!showingSaved && !totalArticles && (
           <button className="btn primary" type="button" onClick={onRefresh}>Load latest news</button>
