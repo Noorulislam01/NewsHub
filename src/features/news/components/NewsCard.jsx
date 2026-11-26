@@ -117,16 +117,18 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
           <SaveButton saved={canSave && saved} onClick={toggleSaved} overlay />
         </div>
       )}
-      {(!article.img || imageFailed) && <SaveButton saved={canSave && saved} onClick={toggleSaved} overlay />}
       <div className="body">
-        <div className="meta ui">
-          <span className="pub">{article.pub}</span>
-          <span>{article.cats?.[0]}</span>
-          <span>{article.date ? new Date(article.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Date unavailable'}</span>
+        <div className="card-copy">
+          {(!article.img || imageFailed) && <SaveButton saved={canSave && saved} onClick={toggleSaved} />}
+          <div className="meta ui">
+            <span className="pub">{article.pub}</span>
+            <span>{article.cats?.[0]}</span>
+            <span>{article.date ? new Date(article.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Date unavailable'}</span>
+          </div>
+          <h2>{article.title}</h2>
+          {article.summary && <p>{article.summary}</p>}
+          {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} />}
         </div>
-        <h2>{article.title}</h2>
-        {article.summary && <p>{article.summary}</p>}
-        {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} />}
         <div className="card-actions ui">
           <ReadStatusButton read={canSave && read} onToggle={toggleRead} />
           <ArticleSummary article={article} canSummarize={canSave} onRequireLogin={onRequireLogin} />
