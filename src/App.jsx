@@ -269,7 +269,7 @@ export default function App() {
     window.setTimeout(() => document.getElementById('briefingAskTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   }
 
-  function startNewChat() {
+  function startNewChat(focusInput = true) {
     rememberHomeScroll();
     setActiveTab('ask');
     setActiveChat(null);
@@ -278,7 +278,7 @@ export default function App() {
     setFiltersOpen(false);
     feed.setShowingSaved(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    window.setTimeout(() => document.getElementById('briefingQuestion')?.focus(), 0);
+    if (focusInput) window.setTimeout(() => document.getElementById('briefingQuestion')?.focus(), 0);
   }
 
   function exploreStory(group) {
@@ -422,7 +422,7 @@ export default function App() {
           if (tab === 'home') navigate('home');
           else if (tab === 'library') navigate('saved');
           else if (tab === 'ask') {
-            if (activeTab !== 'ask') startNewChat();
+            if (activeTab !== 'ask') startNewChat(false);
           } else if (tab === 'tools') {
             rememberHomeScroll();
             setActiveTab('tools');
