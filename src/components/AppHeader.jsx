@@ -4,8 +4,12 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountExpanded, setAccountExpanded] = useState(false);
   const [chatsExpanded, setChatsExpanded] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState('');
   const menuRoot = useRef(null);
   const menuButton = useRef(null);
+  const shareFeedbackTimer = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(shareFeedbackTimer.current), []);
 
   useEffect(() => {
     function closeOutside(event) {
@@ -38,6 +42,48 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
     if (action === 'install') onInstall();
     else if (action === 'signout') onSignOut();
     else onNavigate(action);
+  }
+
+  async function shareApp() {
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const appUrl = import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
+      || (isLocal ? 'https://newshub-delta-nine.vercel.app/' : `${window.location.origin}/`);
+    try {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'One News Hub', text: 'A clearer view of the stories shaping today.', url: appUrl });
+          setShareFeedback('Thanks for sharing One News Hub.');
+        } catch (error) {
+          if (error?.name === 'AbortError') return;
+          await copyAppUrl(appUrl);
+        }
+      } else {
+        await copyAppUrl(appUrl);
+      }
+    } catch {
+      setShareFeedback('Could not share the app link.');
+    }
+    window.clearTimeout(shareFeedbackTimer.current);
+    shareFeedbackTimer.current = window.setTimeout(() => setShareFeedback(''), 2400);
+  }
+
+  async function copyAppUrl(url) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      setShareFeedback('App link copied.');
+      return;
+    }
+    const input = document.createElement('textarea');
+    input.value = url;
+    input.setAttribute('readonly', '');
+    input.style.position = 'fixed';
+    input.style.opacity = '0';
+    document.body.append(input);
+    input.select();
+    const copied = document.execCommand('copy');
+    input.remove();
+    if (!copied) throw new Error('Clipboard access is unavailable.');
+    setShareFeedback('App link copied.');
   }
 
   return (
@@ -109,6 +155,14 @@ export default function AppHeader({ theme, savedCount, authUser, installAvailabl
               <button type="button" onClick={() => selectMenuAction('home')}><span className="menu-symbol">&#x2302;</span>Home</button>
               <button type="button" onClick={() => selectMenuAction('filters')}><span className="menu-symbol">&#x2637;</span>Filters</button>
               {installAvailable && <button type="button" onClick={() => selectMenuAction('install')}><span className="menu-symbol">&#x2B07;</span>Install app</button>}
+              <button type="button" onClick={shareApp}>
+                <svg className="menu-share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                  <path d="m8.7 10.6 6.6-4.2m-6.6 9 6.6 4.2" />
+                </svg>
+                Share this app
+              </button>
+              {shareFeedback && <div className="menu-share-feedback" role="status" aria-live="polite">{shareFeedback}</div>}
               <button type="button" onClick={() => selectMenuAction('saved')}>
                 <svg className="menu-library-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
                   <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />

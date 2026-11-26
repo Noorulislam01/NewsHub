@@ -295,6 +295,8 @@ body.filters-open footer.site-footer{margin-top:auto}
 }
 .menu-panel button:hover,.menu-panel button:focus-visible{background:var(--chip);color:var(--accent);outline:none}
 .menu-symbol{width:22px;text-align:center;font-size:1.15rem;color:var(--accent)}
+.menu-share-icon{width:22px;height:22px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.menu-share-feedback{padding:5px 12px 7px;color:var(--mute);font:500 .78rem/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
 .menu-account-details{margin:2px 4px 6px;padding:6px 9px;background:var(--chip);border:1px solid var(--line);border-radius:11px}
 .menu-account{overflow-wrap:anywhere;padding:5px 3px 9px;color:var(--mute);font-size:.82rem;line-height:1.45}
 .menu-panel button.menu-account-signout{width:100%;gap:10px;padding:8px 3px;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);font-size:.9rem}
