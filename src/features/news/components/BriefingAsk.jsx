@@ -32,15 +32,18 @@ function selectAskGroups(groups, question) {
 }
 
 function toNewsSources(groups, question) {
-  return selectAskGroups(groups, question).map(({ main, others }) => ({
-    title: main.title,
-    publisher: main.pub,
-    category: [...new Set([main, ...others].flatMap(article => article.cats || []))].join(', '),
-    date: main.date ? new Date(main.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Date unavailable',
-    excerpt: [main, ...others].slice(0, 6).map((article, index) => `${index ? 'Also covered: ' : ''}${article.title}. ${article.summary || ''}`).join(' ').slice(0, 1200),
-    url: main.link,
-    alsoCoveredBy: others.slice(0, 5).map(article => article.pub)
-  }));
+  return selectAskGroups(groups, question).flatMap(({ main, others }) => {
+    const coverage = [main, ...others];
+    return coverage.map(article => ({
+      title: article.title,
+      publisher: article.pub,
+      category: (article.cats || []).join(', '),
+      date: article.date ? new Date(article.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Date unavailable',
+      excerpt: article.summary || 'No excerpt provided by the publisher.',
+      url: article.link,
+      alsoCoveredBy: coverage.filter(other => other.pub !== article.pub).slice(0, 5).map(other => other.pub)
+    }));
+  }).slice(0, 30);
 }
 
 function normalizeAnswer(text) {
@@ -91,8 +94,8 @@ function AnswerText({ text }) {
   );
 }
 
-export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat, onSaveChat, onOpenSource, onNewChat }) {
-  const [question, setQuestion] = useState('');
+export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat, onSaveChat, onOpenSource, onNewChat, onClearStoryGroup, storyGroup, pageMode = false }) {
+  const [question, setQuestion] = useState(storyGroup ? 'Compare coverage of this story: what do publishers agree on, what differs, and what is still unclear?' : '');
   const [status, setStatus] = useState('idle');
   const [messages, setMessages] = useState(() => Array.isArray(savedChat?.messages)
     ? savedChat.messages.map(message => ({ ...message, sourceNavigation: 'publisher' }))
@@ -102,6 +105,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
   const [saveState, setSaveState] = useState('idle');
   const requestController = useRef(null);
   const answerCardRef = useRef(null);
+  const saveQueueRef = useRef(Promise.resolve());
 
   useEffect(() => {
     if (!savedChat?.id) return;
@@ -136,13 +140,18 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
     onNewChat?.();
   }
 
-  async function saveConversation(conversation = messages) {
-    if (!canAsk || !conversation.length || !onSaveChat) return;
+  function saveConversation(conversation = messages, id = chatId) {
+    if (!canAsk || !conversation.length || !onSaveChat || !id) return Promise.resolve(null);
     setSaveState('saving');
-    const id = chatId || newChatId();
-    setChatId(id);
-    const saved = await onSaveChat({ id, title: conversation[0]?.question || 'News chat', messages: conversation });
-    setSaveState(saved ? 'saved' : 'error');
+    const snapshot = conversation.map(message => ({ ...message, sourceNavigation: 'publisher' }));
+    saveQueueRef.current = saveQueueRef.current
+      .catch(() => null)
+      .then(() => onSaveChat({ id, title: conversation[0]?.question || 'News chat', messages: snapshot }))
+      .then(saved => {
+        setSaveState(saved ? 'saved' : 'error');
+        return saved;
+      });
+    return saveQueueRef.current;
   }
 
   async function handleSubmit(event) {
@@ -154,7 +163,10 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
       return;
     }
     const turnId = `${Date.now()}-${Math.random()}`;
-    setMessages(current => [...current, { id: turnId, question: trimmedQuestion, status: 'loading', answer: '', sources: [], error: '' }]);
+    const pendingMessage = { id: turnId, question: trimmedQuestion, status: 'loading', answer: '', sources: [], error: '' };
+    const pendingMessages = [...messages, pendingMessage];
+    let currentChatId = chatId;
+    setMessages(pendingMessages);
     setQuestion('');
     setMinimized(false);
     setStatus('loading');
@@ -179,6 +191,10 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
         return;
       }
 
+      currentChatId ||= newChatId();
+      setChatId(currentChatId);
+      void saveConversation(pendingMessages, currentChatId);
+
       const response = await fetch('/api/ask-news', {
         method: 'POST',
         signal: controller.signal,
@@ -199,50 +215,51 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
         throw new Error(result.error || 'Could not answer from the briefing.');
       }
       const completed = { id: turnId, question: trimmedQuestion, status: 'done', answer: result.answer, sources: Array.isArray(result.sources) ? result.sources : [], sourceNavigation: 'card', error: '' };
-      const nextMessages = [...messages, completed];
-      const id = chatId || newChatId();
+      const nextMessages = pendingMessages.map(message => message.id === turnId ? completed : message);
       setMessages(nextMessages);
-      setChatId(id);
-      setSaveState('saving');
-      const saved = await onSaveChat?.({ id, title: nextMessages[0]?.question || trimmedQuestion, messages: nextMessages });
-      setSaveState(saved ? 'saved' : 'error');
+      void saveConversation(nextMessages, currentChatId);
       setStatus('done');
     } catch (requestError) {
       if (requestError?.name === 'AbortError') return;
-      updateMessage(turnId, { status: 'error', error: requestError?.message || 'Could not answer from the briefing.' });
+      const failedMessages = pendingMessages.map(message => message.id === turnId
+        ? { ...message, status: 'error', error: requestError?.message || 'Could not answer from the briefing.' }
+        : message);
+      setMessages(failedMessages);
       setStatus('done');
+      if (currentChatId) void saveConversation(failedMessages, currentChatId);
     } finally {
       if (requestController.current === controller) requestController.current = null;
     }
   }
 
   return (
-    <section className="briefing-ask ui" aria-labelledby="briefingAskTitle">
-      <div className="briefing-ask-heading">
+    <section className={`briefing-ask ui${pageMode ? ' briefing-ask-page' : ''}`} aria-labelledby="briefingAskTitle">
+      {!pageMode && <div className="briefing-ask-heading">
         <div>
-          <h3 id="briefingAskTitle">Ask about these stories</h3>
-          <p>Answers use the briefing excerpts and link back to publishers.</p>
+          <h3 id="briefingAskTitle">{storyGroup ? 'Compare story coverage' : 'Ask about these stories'}</h3>
+          <p>{storyGroup ? storyGroup.main.title : 'Answers use the briefing excerpts and link back to publishers.'}</p>
         </div>
-      </div>
+        {storyGroup && <button className="briefing-ask-clear-scope" type="button" onClick={onClearStoryGroup}>Ask across current feed</button>}
+      </div>}
+      {pageMode && messages.length === 0 && <div className="briefing-ask-welcome">
+        <h2>What would you like to know?</h2>
+        <p>Ask a question about the latest stories in your feed.</p>
+      </div>}
       {messages.length > 0 && (
-        <div className={`briefing-answer${minimized ? ' is-minimized' : ''}`} aria-live="polite" ref={answerCardRef}>
-          <div className="briefing-answer-toolbar">
+        <div className={`briefing-answer${minimized ? ' is-minimized' : ''}${pageMode ? ' briefing-answer-inline' : ''}`} aria-live="polite" ref={answerCardRef}>
+          {!pageMode ? <div className="briefing-answer-toolbar">
             <strong>News chat</strong>
             <div className="briefing-answer-toolbar-actions">
               {messages.length > 0 && <button className="briefing-answer-save-retry" type="button" onClick={() => saveConversation()} disabled={!canAsk || status === 'loading' || saveState === 'saving' || saveState === 'saved'} title={saveState === 'error' ? 'Retry saving this conversation' : 'Save this conversation'}>{saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Retry save' : 'Save chat'}</button>}
               {saveState === 'error' && <span className="briefing-chat-save-state is-error" role="status">Couldn’t save</span>}
               <button className="briefing-answer-tool" type="button" onClick={() => setMinimized(value => !value)} aria-label={minimized ? 'Expand chat' : 'Minimize chat'} title={minimized ? 'Expand chat' : 'Minimize chat'} aria-expanded={!minimized}>
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  {minimized ? <path d="m6 14 6-6 6 6" /> : <path d="M6 10h12" />}
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">{minimized ? <path d="m6 14 6-6 6 6" /> : <path d="M6 10h12" />}</svg>
               </button>
               <button className="briefing-answer-tool" type="button" onClick={clearSearch} aria-label="Close chat and clear conversation" title="Close chat">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="m6 6 12 12M18 6 6 18" />
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
               </button>
             </div>
-          </div>
+          </div> : saveState === 'error' && <div className="briefing-chat-save-error" role="status">Chat couldn’t save. <button type="button" onClick={() => saveConversation()} disabled={status === 'loading'}>Retry</button></div>}
           {!minimized && messages.map(message => (
             <section className="briefing-chat-turn" key={message.id}>
               <p className="briefing-chat-question">{message.question}</p>
@@ -269,26 +286,31 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
         </div>
       )}
       <form className="briefing-ask-form" onSubmit={handleSubmit}>
-        <div className="briefing-composer">
-          <label className="sr-only" htmlFor="briefingQuestion">Your question about the news</label>
-          <input
-            type="text"
-            id="briefingQuestion"
-            value={question}
-            onChange={event => setQuestion(event.target.value)}
-            maxLength={500}
-            autoComplete="off"
-            enterKeyHint="send"
-            placeholder="Ask about news in your current feed..."
-          />
-          <button className={`briefing-ask-submit${status === 'loading' ? ' is-loading' : ''}`} type="submit" aria-label={status === 'loading' ? 'Preparing answer' : 'Ask about the briefing'} title={status === 'loading' ? 'Preparing answer' : canAsk && !groups.length ? 'Load news before asking' : 'Ask about the briefing'} aria-busy={status === 'loading'} disabled={status === 'loading' || question.trim().length < 3 || (canAsk && !groups.length)}>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
-            </svg>
+        <div className="ask-news-composer-row">
+          <div className="briefing-composer">
+            <label className="sr-only" htmlFor="briefingQuestion">Your question about the news</label>
+            <input
+              type="text"
+              id="briefingQuestion"
+              value={question}
+              onChange={event => setQuestion(event.target.value)}
+              maxLength={500}
+              autoComplete="off"
+              enterKeyHint="send"
+              placeholder="Ask about news in your current feed..."
+            />
+            <button className={`briefing-ask-submit${status === 'loading' ? ' is-loading' : ''}`} type="submit" aria-label={status === 'loading' ? 'Preparing answer' : 'Ask about the briefing'} title={status === 'loading' ? 'Preparing answer' : canAsk && !groups.length ? 'Load news before asking' : 'Ask about the briefing'} aria-busy={status === 'loading'} disabled={status === 'loading' || question.trim().length < 3 || (canAsk && !groups.length)}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
+              </svg>
+            </button>
+          </div>
+          <button className="ask-news-new-chat-button" type="button" onClick={() => onNewChat?.()} aria-label="Start a new chat" title="New chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           </button>
         </div>
       </form>
-      <p className="briefing-ask-disclaimer">Answers are based on RSS headlines and excerpts, which may not include the full articles.</p>
+      {!pageMode && <p className="briefing-ask-disclaimer">Answers are based on RSS headlines and excerpts, which may not include the full articles.</p>}
     </section>
   );
 }

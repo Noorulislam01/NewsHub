@@ -3,7 +3,10 @@ import NewsGrid from './features/news/components/NewsGrid.jsx';
 import BriefingAsk from './features/news/components/BriefingAsk.jsx';
 import FilterPanel from './features/preferences/FilterPanel.jsx';
 import AppHeader from './components/AppHeader.jsx';
+import BottomNavigation from './components/BottomNavigation.jsx';
 import RefreshButton from './components/RefreshButton.jsx';
+import ToolsPage from './components/ToolsPage.jsx';
+import AskNewsPage from './features/news/components/AskNewsPage.jsx';
 import { loadPreferences, savePreferences } from './features/preferences/preferences.js';
 import { CATEGORIES, DEFAULT_PAPERS, SOURCES } from './features/news/newsSources.js';
 import { useSavedArticles } from './features/library/useSavedArticles.js';
@@ -15,31 +18,45 @@ import { useAuth } from './features/auth/AuthProvider.jsx';
 import { readSharedArticle } from './shared/sharedArticle.js';
 
 const CATEGORY_NAV_SCROLL_KEY = 'inh_category_nav_scroll';
+const ACTIVE_TAB_KEY = 'inh_active_tab';
+const APP_TABS = new Set(['home', 'library', 'ask', 'tools']);
+
+function getInitialTab() {
+  try {
+    if (new URL(window.location.href).searchParams.has('shared')) return 'home';
+    const savedTab = window.sessionStorage.getItem(ACTIVE_TAB_KEY);
+    return APP_TABS.has(savedTab) ? savedTab : 'home';
+  } catch {
+    return 'home';
+  }
+}
 
 /** React owns the application UI and news feed lifecycle. */
 export default function App() {
   const [preferences, setPreferences] = useState(loadPreferences);
   const [draftPreferences, setDraftPreferences] = useState(preferences);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [sourceNavigation, setSourceNavigation] = useState(null);
-  const [search, setSearch] = useState('');
-  const [draftSearch, setDraftSearch] = useState('');
   const [installAvailable, setInstallAvailable] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState('signin');
   const [authDialogPrompt, setAuthDialogPrompt] = useState('');
   const [activeChat, setActiveChat] = useState(null);
+  const [askStoryGroup, setAskStoryGroup] = useState(null);
   const [sharedArticle, setSharedArticle] = useState(readSharedArticle);
   const [chatSession, setChatSession] = useState(0);
   const installPrompt = useRef(null);
   const categoryNavRef = useRef(null);
   const categoryNavRestored = useRef(false);
+  const homeScrollPosition = useRef(0);
+  const restoreHomeScroll = useRef(false);
   const auth = useAuth();
   const library = useSavedArticles(auth);
   const chats = useSavedChats(auth);
   const readLibrary = useReadArticles();
   const { savedArticles } = library;
-  const feed = useNewsFeed(preferences, search, savedArticles);
+  const feed = useNewsFeed(preferences, '', savedArticles);
   useLayoutEffect(() => {
     const nav = categoryNavRef.current;
     if (!nav || !feed.categoryNav.length || categoryNavRestored.current) return;
@@ -51,6 +68,33 @@ export default function App() {
     }
     categoryNavRestored.current = true;
   }, [feed.categoryNav.length]);
+
+  useLayoutEffect(() => {
+    if (activeTab !== 'home' || !restoreHomeScroll.current) return;
+    window.scrollTo({ top: homeScrollPosition.current, behavior: 'auto' });
+    restoreHomeScroll.current = false;
+  }, [activeTab]);
+
+  useLayoutEffect(() => {
+    if (activeTab !== 'home' || sharedArticle) return undefined;
+    let previousRestoration = 'auto';
+    try {
+      previousRestoration = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
+    } catch {
+      // Fall back to explicitly scrolling to the top if unsupported.
+    }
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    const frame = window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+    return () => {
+      window.cancelAnimationFrame(frame);
+      try {
+        window.history.scrollRestoration = previousRestoration;
+      } catch {
+        // Ignore unsupported history restoration controls.
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const nav = categoryNavRef.current;
@@ -81,6 +125,14 @@ export default function App() {
     document.documentElement.dataset.theme = preferences.theme;
     savePreferences(preferences);
   }, [preferences]);
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+    } catch {
+      // Keep navigation usable when browser storage is unavailable.
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     document.body.classList.toggle('filters-open', filtersOpen);
@@ -119,23 +171,28 @@ export default function App() {
     setDraftPreferences(next);
   }
 
-  function changeSearch(value) {
-    setDraftSearch(value);
-  }
-
   function clearFilters() {
     const defaults = { ...draftPreferences, papers: [...DEFAULT_PAPERS], cats: ['All News'], range: 'latest' };
     changePreferences(defaults);
-    setDraftSearch('');
+  }
+
+  function openFilters() {
+    setDraftPreferences(preferences);
+    setFiltersOpen(true);
+  }
+
+  function cancelFilters() {
+    setDraftPreferences(preferences);
+    setFiltersOpen(false);
   }
 
   function applyFilters() {
+    setActiveTab('home');
     setSourceNavigation(null);
     setFiltersOpen(false);
     feed.setShowingSaved(false);
     feed.setActiveCategory(null);
     setPreferences(draftPreferences);
-    setSearch(draftSearch);
     feed.reload(true, draftPreferences);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -146,24 +203,36 @@ export default function App() {
     setAuthDialogOpen(true);
   }
 
+  function rememberHomeScroll() {
+    if (activeTab === 'home' && !filtersOpen) homeScrollPosition.current = window.scrollY;
+  }
+
   function navigate(action) {
+    if (action !== 'home') rememberHomeScroll();
     setSourceNavigation(null);
-    if (action !== 'chat') setActiveChat(null);
+    if (action !== 'chat') {
+      setActiveChat(null);
+      setAskStoryGroup(null);
+    }
     if (action === 'home') {
+      restoreHomeScroll.current = activeTab !== 'home';
+      setActiveTab('home');
       setFiltersOpen(false);
       feed.setShowingSaved(false);
     } else if (action === 'filters') {
-      setFiltersOpen(true);
+      setActiveTab('home');
+      openFilters();
     } else if (action === 'saved' && auth.user) {
-      setSearch('');
+      setActiveTab('library');
       setFiltersOpen(false);
       feed.setShowingSaved(true);
     } else if (action === 'saved') {
+      setActiveTab('home');
       requireLogin('Sign in to view your library.');
     } else if (action === 'account') {
       requireLogin();
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (action !== 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function changeTheme(nextTheme) {
@@ -187,24 +256,50 @@ export default function App() {
   }
 
   function openChat(chat) {
+    setActiveTab('ask');
     setActiveChat(chat);
+    setAskStoryGroup(null);
     setFiltersOpen(false);
     feed.setShowingSaved(false);
     window.setTimeout(() => document.getElementById('briefingAskTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   }
 
   function startNewChat() {
+    rememberHomeScroll();
+    setActiveTab('ask');
     setActiveChat(null);
+    setAskStoryGroup(null);
+    setChatSession(current => current + 1);
+    setFiltersOpen(false);
+    feed.setShowingSaved(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.setTimeout(() => document.getElementById('briefingQuestion')?.focus(), 0);
+  }
+
+  function exploreStory(group) {
+    rememberHomeScroll();
+    setActiveTab('ask');
+    setActiveChat(null);
+    setAskStoryGroup(group);
     setChatSession(current => current + 1);
     setFiltersOpen(false);
     feed.setShowingSaved(false);
     window.setTimeout(() => document.getElementById('briefingQuestion')?.focus(), 0);
   }
 
+  function clearAskStoryGroup() {
+    setAskStoryGroup(null);
+    setChatSession(current => current + 1);
+  }
+
   function openChatSource(url) {
-    const isInCurrentFeed = feed.groups.some(({ main }) => main.link === url);
-    if (!isInCurrentFeed) return false;
-    setSourceNavigation({ id: `${Date.now()}-${url}`, url });
+    const matchingGroup = feed.groups.find(({ main, others }) => main.link === url || others.some(article => article.link === url));
+    if (!matchingGroup) return false;
+    const cardUrl = matchingGroup.main.link;
+    setActiveTab('home');
+    setFiltersOpen(false);
+    feed.setShowingSaved(false);
+    setSourceNavigation({ id: `${Date.now()}-${url}`, url: cardUrl });
     window.setTimeout(() => document.getElementById('grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
     return true;
   }
@@ -224,6 +319,7 @@ export default function App() {
   async function signOut() {
     try {
       await auth.signOut();
+      setActiveTab('home');
       setActiveChat(null);
       feed.setShowingSaved(false);
     } catch (error) {
@@ -235,39 +331,30 @@ export default function App() {
     <>
       <AppHeader
         theme={preferences.theme}
-        savedCount={savedArticles.length}
-        authUser={auth.user}
-        installAvailable={installAvailable}
         onThemeChange={changeTheme}
-        onNavigate={navigate}
-        onInstall={installApp}
-        onSignOut={signOut}
-        savedChats={chats.savedChats}
-        chatsLoading={chats.loading}
-        onOpenChat={openChat}
-        onNewChat={startNewChat}
-      >
-        <FilterPanel
-          open={filtersOpen}
-          preferences={draftPreferences}
-          newspapers={SOURCES}
-          categories={CATEGORIES}
-          search={draftSearch}
-          onChange={changePreferences}
-          onSearch={changeSearch}
-          onShow={applyFilters}
-          onClear={clearFilters}
-        />
-      </AppHeader>
-      <main id="contentMain" className={`${filtersOpen ? 'filters-mode' : ''}${!feed.showingSaved && !filtersOpen ? ' ask-mode' : ''}`}>
-        <div className="stats ui">
+        showFilter={activeTab === 'home' && !feed.showingSaved && !sharedArticle}
+        filtersOpen={filtersOpen}
+        onFilterToggle={() => filtersOpen ? cancelFilters() : openFilters()}
+      />
+      <FilterPanel
+        open={filtersOpen}
+        preferences={draftPreferences}
+        newspapers={SOURCES}
+        categories={CATEGORIES}
+        onChange={changePreferences}
+        onShow={applyFilters}
+        onClear={clearFilters}
+        onCancel={cancelFilters}
+      />
+      <main id="contentMain" className={activeTab === 'ask' ? 'ask-tab-mode' : ''}>
+        {(activeTab === 'home' || activeTab === 'library') && <div className="stats ui">
           <span>Articles: <b>{feed.showingSaved ? savedArticles.length : feed.groups.length}</b></span>
           <span>Newspapers selected: <b>{preferences.papers.length}</b></span>
           <span>Feeds loaded: <b>{feed.feedStatus.loaded}</b></span>
           <span>Last updated: <b>{feed.feedStatus.updated}</b></span>
-        </div>
-        <div className="category-bar ui" hidden={!feed.categoryNav.length || feed.showingSaved || Boolean(sharedArticle)}>
-          <nav className="category-nav" aria-label="News views and categories" ref={categoryNavRef}>
+        </div>}
+        <div className="category-bar ui" hidden={activeTab !== 'home' || feed.showingSaved || Boolean(sharedArticle)}>
+          <nav className="category-nav" aria-label="News views and categories" ref={categoryNavRef} hidden={!feed.categoryNav.length}>
             {feed.categoryNav.map(button => (
               <button
                 className="category-pill"
@@ -285,17 +372,17 @@ export default function App() {
             ))}
           </nav>
         </div>
-        <div className="notes ui" id="notes" aria-live="polite">
+        {(activeTab === 'home' || activeTab === 'library') && <div className="notes ui" id="notes" aria-live="polite">
           {library.error && <div className="note" role="alert">{library.error}</div>}
           {chats.error && <div className="note" role="alert">{chats.error}</div>}
           {feed.loadingMessage && <div className="note info">{feed.loadingMessage}</div>}
           {feed.notes.map(note => <div className={`note${note.info ? ' info' : ''}`} key={note.id}>{note.message}</div>)}
-        </div>
-        <div className={`grid${sharedArticle ? ' shared-article-grid' : ''}`} id="grid">
+        </div>}
+        <div className={`grid${sharedArticle ? ' shared-article-grid' : ''}`} id="grid" hidden={activeTab !== 'home' && activeTab !== 'library'}>
           <NewsGrid
             groups={sharedArticle ? [{ main: sharedArticle, others: [] }] : (feed.showingSaved && library.loading ? [] : feed.groups)}
             showingSaved={feed.showingSaved}
-            resetKey={`${sharedArticle?.link || ''}|${feed.activeCategory || ''}|${search}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}`}
+            resetKey={`${sharedArticle?.link || ''}|${feed.activeCategory || ''}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}`}
             totalArticles={sharedArticle ? 1 : feed.totalArticles}
             loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}
@@ -305,6 +392,7 @@ export default function App() {
             onToggleRead={readLibrary.toggleReadArticle}
             onRequireLogin={requireLogin}
             onRefresh={refreshNews}
+            onExploreStory={exploreStory}
             focusArticleRequest={sourceNavigation}
           />
           {sharedArticle && (
@@ -314,25 +402,33 @@ export default function App() {
             </div>
           )}
         </div>
+        {activeTab === 'ask' && <AskNewsPage authUser={auth.user} chats={chats.savedChats} chatsLoading={chats.loading} onOpenChat={openChat} onRequireLogin={requireLogin}>
+          <BriefingAsk key={activeChat?.id || `new-chat-${chatSession}`} groups={askStoryGroup ? [askStoryGroup] : feed.groups} storyGroup={askStoryGroup} pageMode canAsk={Boolean(auth.user)} onRequireLogin={requireLogin} savedChat={activeChat} onSaveChat={chats.saveChat} onOpenSource={openChatSource} onNewChat={startNewChat} onClearStoryGroup={clearAskStoryGroup} />
+        </AskNewsPage>}
+        {activeTab === 'tools' && <ToolsPage authUser={auth.user} theme={preferences.theme} onThemeChange={changeTheme} installAvailable={installAvailable} onInstall={installApp} onSignOut={signOut} onRequireLogin={requireLogin} />}
       </main>
-      {!feed.showingSaved && !filtersOpen && (
-        <div className="floating-news-tools has-ask">
-          <BriefingAsk key={activeChat?.id || `new-chat-${chatSession}`} groups={feed.groups} canAsk={Boolean(auth.user)} onRequireLogin={requireLogin} savedChat={activeChat} onSaveChat={chats.saveChat} onOpenSource={openChatSource} onNewChat={startNewChat} />
-          <RefreshButton refreshing={feed.loading} onRefresh={refreshNews} />
-        </div>
-      )}
-      <footer className="site-footer ui">
-        <div className="footer-inner">
-          <div className="footer-copy">
-            <p className="footer-tagline">A clearer view of the stories shaping today.</p>
-            <div className="footer-meta">
-              <span>© <span>{new Date().getFullYear()}</span> One News Hub</span>
-              <span>Read every story at its original source.</span>
-            </div>
-          </div>
-          <img className="footer-logo" src="/one-news-hub-192.png" alt="One News Hub logo" width="74" height="74" />
-        </div>
-      </footer>
+      {activeTab === 'home' && !filtersOpen && <RefreshButton aboveNavigation refreshing={feed.loading} onRefresh={refreshNews} />}
+      <BottomNavigation
+        activeTab={activeTab}
+        savedCount={savedArticles.length}
+        authUser={auth.user}
+        savedCountReady={library.ready}
+        onTabChange={tab => {
+          if (tab === 'home') navigate('home');
+          else if (tab === 'library') navigate('saved');
+          else if (tab === 'ask') {
+            if (activeTab !== 'ask') startNewChat();
+          } else if (tab === 'tools') {
+            rememberHomeScroll();
+            setActiveTab('tools');
+            setFiltersOpen(false);
+            feed.setShowingSaved(false);
+            setAskStoryGroup(null);
+            setActiveChat(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }}
+      />
       <AuthDialog
         open={authDialogOpen}
         initialMode={authDialogMode}

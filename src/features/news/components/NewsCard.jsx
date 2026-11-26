@@ -10,7 +10,7 @@ function highlightPublisherLink(event) {
   link.highlightTimer = window.setTimeout(() => link.classList.remove('is-opening'), 700);
 }
 
-function RelatedPublishers({ articles }) {
+function RelatedPublishers({ articles, onCompareCoverage }) {
   return (
     <div className="also ui">
       Also covered by: {articles.map(article => (
@@ -25,6 +25,9 @@ function RelatedPublishers({ articles }) {
           {article.pub}
         </a>
       ))}
+      <button className="story-compare-trigger" type="button" onClick={event => { event.stopPropagation(); onCompareCoverage?.(); }}>
+        Compare coverage
+      </button>
     </div>
   );
 }
@@ -101,13 +104,18 @@ function ArticleMenu({ read, onToggleRead, onShare }) {
   );
 }
 
-export default function NewsCard({ article, otherCoverage, saved, read, canSave, onSave, onRequireLogin, onToggleRead }) {
+export default function NewsCard({ article, otherCoverage, saved, read, showingSaved = false, canSave, onSave, onRequireLogin, onToggleRead, onExploreStory }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [cardNotice, setCardNotice] = useState('');
   const [noticePosition, setNoticePosition] = useState('top');
   const cardNoticeTimer = useRef(null);
 
   useEffect(() => () => window.clearTimeout(cardNoticeTimer.current), []);
+
+  useEffect(() => {
+    setCardNotice('');
+    window.clearTimeout(cardNoticeTimer.current);
+  }, [showingSaved]);
 
   function showCardNotice(message, position = 'top') {
     setCardNotice(message);
@@ -199,7 +207,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
           </div>
           <h2>{article.title}</h2>
           {article.summary && <p>{article.summary}</p>}
-          {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} />}
+          {otherCoverage.length > 0 && <RelatedPublishers articles={otherCoverage} onCompareCoverage={() => onExploreStory?.({ main: article, others: otherCoverage })} />}
         </div>
         <div className="card-actions ui">
           <SaveArticleButton saved={canSave && saved} onClick={toggleSaved} />

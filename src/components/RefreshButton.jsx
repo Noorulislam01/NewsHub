@@ -1,7 +1,7 @@
-export default function RefreshButton({ refreshing, onRefresh }) {
+export default function RefreshButton({ refreshing, onRefresh, aboveNavigation = false }) {
   return (
     <button
-      className={`refresh-icon${refreshing ? ' is-refreshing' : ''}`}
+      className={`refresh-icon${aboveNavigation ? ' refresh-icon-above-navigation' : ''}${refreshing ? ' is-refreshing' : ''}`}
       type="button"
       aria-label={refreshing ? 'Refreshing news' : 'Refresh news'}
       title="Refresh news"

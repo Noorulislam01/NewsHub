@@ -40,7 +40,7 @@ function MultiSelect({ id, label, items, selected, allText, onChange, onSelectAl
           <div className="acts">
             <button className="btn" type="button" onClick={() => onSelectAll ? onSelectAll() : onChange(items.map(item => item.id))}>{allText}</button>
             <button className="btn" type="button" onClick={() => onChange([])}>Clear All</button>
-            <button className="btn" type="button" aria-label="Minimise list" onClick={() => setOpen(false)}>Done ▲</button>
+            <button className="btn" type="button" aria-label="Done selecting" onClick={() => setOpen(false)}>Done</button>
           </div>
           <div className="list">
             {filteredItems.length ? filteredItems.map(item => (
@@ -56,25 +56,42 @@ function MultiSelect({ id, label, items, selected, allText, onChange, onSelectAl
   );
 }
 
-export default function FilterPanel({ open, preferences, newspapers, categories, onChange, onSearch, search, onShow, onClear }) {
+export default function FilterPanel({ open, preferences, newspapers, categories, onChange, onShow, onClear, onCancel }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') onCancel?.();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+
   return (
-    <div className={`tools${open ? '' : ' hide'}`} id="tools" aria-label="News filters">
-      <input type="search" value={search} onChange={event => onSearch(event.target.value)} placeholder="Search news" aria-label="Search news" />
-      <MultiSelect id="ddPapers" label="Select Newspapers" items={newspapers} selected={preferences.papers} allText="Select All" onChange={papers => onChange({ ...preferences, papers })} />
-      <MultiSelect id="ddCats" label="Select Categories (Optional)" items={categories.map(category => ({ id: category, name: category }))} selected={preferences.cats} allText="All News" onChange={cats => onChange({ ...preferences, cats })} onSelectAll={() => onChange({ ...preferences, cats: ['All News'] })} />
-      <select
-        value={preferences.range}
-        aria-label="Date range"
-        onChange={event => onChange({ ...preferences, range: event.target.value })}
-      >
-        <option value="latest">Latest News</option>
-        <option value="24">Last 24 Hours</option>
-        <option value="48">Last 48 Hours</option>
-        <option value="168">Last 7 Days</option>
-      </select>
-      <button className="btn primary" type="button" onClick={onShow}>SHOW NEWS</button>
-      <button className="btn" type="button" onClick={onClear}>Clear Filters</button>
-      <button className="btn" type="button" onClick={() => onChange({ ...preferences, papers: newspapers.map(source => source.id) })}>Select All Newspapers</button>
+    <div className="filter-dialog-layer">
+      <button className="filter-dialog-backdrop" type="button" aria-label="Cancel and close filters" onClick={onCancel} />
+      <section className="filter-dialog ui" id="tools" role="dialog" aria-modal="true" aria-labelledby="filterDialogTitle">
+        <header className="filter-dialog-header">
+          <div><h2 id="filterDialogTitle">Filters</h2><p>Choose the publishers, topics, and date range for your feed.</p></div>
+          <button className="filter-dialog-close" type="button" aria-label="Close filters" onClick={onCancel}>×</button>
+        </header>
+        <div className="filter-dialog-fields">
+          <MultiSelect id="ddPapers" label="Select Newspapers" items={newspapers} selected={preferences.papers} allText="Select All" onChange={papers => onChange({ ...preferences, papers })} />
+          <MultiSelect id="ddCats" label="Select Categories (Optional)" items={categories.map(category => ({ id: category, name: category }))} selected={preferences.cats} allText="All News" onChange={cats => onChange({ ...preferences, cats })} onSelectAll={() => onChange({ ...preferences, cats: ['All News'] })} />
+          <select value={preferences.range} aria-label="Date range" onChange={event => onChange({ ...preferences, range: event.target.value })}>
+            <option value="latest">Latest News</option>
+            <option value="24">Last 24 Hours</option>
+            <option value="48">Last 48 Hours</option>
+            <option value="168">Last 7 Days</option>
+          </select>
+          <button className="btn filter-select-all" type="button" onClick={() => onChange({ ...preferences, papers: newspapers.map(source => source.id) })}>Select All Newspapers</button>
+        </div>
+        <div className="filter-dialog-actions">
+          <button className="btn filter-clear" type="button" onClick={onClear}>Clear filters</button>
+          <button className="btn primary" type="button" onClick={onShow}>Show news</button>
+        </div>
+      </section>
     </div>
   );
 }

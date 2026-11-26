@@ -60,6 +60,7 @@ async function fetchAccountArticles(userId) {
 export function useSavedArticles(auth) {
   const [savedArticles, setSavedArticles] = useState(loadSavedArticles);
   const [loading, setLoading] = useState(false);
+  const [loadedUserId, setLoadedUserId] = useState(null);
   const [error, setError] = useState('');
   const savedRef = useRef(savedArticles);
   const activeUserId = useRef(auth.user?.id || null);
@@ -79,6 +80,7 @@ export function useSavedArticles(auth) {
       savedRef.current = guestArticles;
       setSavedArticles(guestArticles);
       setLoading(false);
+      setLoadedUserId(null);
       return;
     }
 
@@ -86,6 +88,7 @@ export function useSavedArticles(auth) {
     savedRef.current = Array.isArray(cached) ? cached : [];
     setSavedArticles(savedRef.current);
     setLoading(true);
+    setLoadedUserId(null);
 
     async function loadLibrary() {
       try {
@@ -113,7 +116,10 @@ export function useSavedArticles(auth) {
         savedRef.current = fallback;
         setSavedArticles(fallback);
       } finally {
-        if (request === requestId.current) setLoading(false);
+        if (request === requestId.current) {
+          setLoading(false);
+          setLoadedUserId(userId);
+        }
       }
     }
 
@@ -159,5 +165,5 @@ export function useSavedArticles(auth) {
     return mutationQueue.current;
   }, []);
 
-  return { savedArticles, loading, error, saveArticle };
+  return { savedArticles, loading, ready: !auth.loading && loadedUserId === (auth.user?.id || null), error, saveArticle };
 }

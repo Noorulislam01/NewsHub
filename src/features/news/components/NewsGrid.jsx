@@ -6,13 +6,19 @@ const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_BUTTON_COUNT = 5;
 
-export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead, focusArticleRequest }) {
-  const [page, setPage] = useState(1);
+export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead, onExploreStory, focusArticleRequest }) {
+  const [pages, setPages] = useState({ feed: 1, library: 1 });
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const pageKey = showingSaved ? 'library' : 'feed';
+  const page = pages[pageKey];
+  const setPage = nextPage => setPages(current => ({
+    ...current,
+    [pageKey]: typeof nextPage === 'function' ? nextPage(current[pageKey]) : nextPage
+  }));
 
   useEffect(() => {
     setPage(1);
-  }, [resetKey, showingSaved]);
+  }, [resetKey]);
 
   useEffect(() => {
     const target = focusArticleRequest?.url;
@@ -85,10 +91,12 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
         otherCoverage={others}
         saved={savedKeys.has(articleKey(main))}
         read={readArticleKeys?.has(articleKey(main)) || false}
+        showingSaved={showingSaved}
         canSave={canSave}
         onSave={onSave}
         onRequireLogin={onRequireLogin}
         onToggleRead={onToggleRead}
+        onExploreStory={onExploreStory}
       />
     ))}
     {pageCount > 1 && (
