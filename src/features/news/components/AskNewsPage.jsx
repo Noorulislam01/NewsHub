@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import SavedChatHistory from '../../library/SavedChatHistory.jsx';
 
-export default function AskNewsPage({ authUser, chats, chatsLoading, onOpenChat, onRequireLogin, children }) {
+export default function AskNewsPage({ hidden = false, authUser, chats, chatsLoading, onOpenChat, onRequireLogin, children }) {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   function openSavedChat(chat) {
@@ -10,7 +10,7 @@ export default function AskNewsPage({ authUser, chats, chatsLoading, onOpenChat,
   }
 
   return (
-    <section className="ask-news-page ui" aria-labelledby="askNewsPageTitle">
+    <section className="ask-news-page ui" aria-labelledby="askNewsPageTitle" hidden={hidden}>
       <header className="ask-news-header">
         <div className="ask-news-title-group">
           <button className="ask-news-icon-button" type="button" onClick={() => setHistoryOpen(true)} aria-label="Open chat history" title="Chat history" aria-expanded={historyOpen}>

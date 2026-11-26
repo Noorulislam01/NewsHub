@@ -210,10 +210,6 @@ export default function App() {
   function navigate(action) {
     if (action !== 'home') rememberHomeScroll();
     setSourceNavigation(null);
-    if (action !== 'chat') {
-      setActiveChat(null);
-      setAskStoryGroup(null);
-    }
     if (action === 'home') {
       const alreadyOnHome = activeTab === 'home';
       restoreHomeScroll.current = !alreadyOnHome;
@@ -407,9 +403,9 @@ export default function App() {
             </div>
           )}
         </div>
-        {activeTab === 'ask' && <AskNewsPage authUser={auth.user} chats={chats.savedChats} chatsLoading={chats.loading} onOpenChat={openChat} onRequireLogin={requireLogin}>
+        <AskNewsPage hidden={activeTab !== 'ask'} authUser={auth.user} chats={chats.savedChats} chatsLoading={chats.loading} onOpenChat={openChat} onRequireLogin={requireLogin}>
           <BriefingAsk key={activeChat?.id || `new-chat-${chatSession}`} groups={askStoryGroup ? [askStoryGroup] : feed.groups} storyGroup={askStoryGroup} pageMode canAsk={Boolean(auth.user)} onRequireLogin={requireLogin} savedChat={activeChat} onSaveChat={chats.saveChat} onOpenSource={openChatSource} onNewChat={startNewChat} onClearStoryGroup={clearAskStoryGroup} />
-        </AskNewsPage>}
+        </AskNewsPage>
         {activeTab === 'tools' && <ToolsPage authUser={auth.user} theme={preferences.theme} onThemeChange={changeTheme} installAvailable={installAvailable} onInstall={installApp} onSignOut={signOut} onRequireLogin={requireLogin} />}
       </main>
       {activeTab === 'home' && !filtersOpen && <RefreshButton aboveNavigation refreshing={feed.loading} onRefresh={refreshNews} />}
@@ -422,14 +418,18 @@ export default function App() {
           if (tab === 'home') navigate('home');
           else if (tab === 'library') navigate('saved');
           else if (tab === 'ask') {
-            if (activeTab !== 'ask') startNewChat(false);
+            if (activeTab !== 'ask') {
+              rememberHomeScroll();
+              setActiveTab('ask');
+              setFiltersOpen(false);
+              feed.setShowingSaved(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
           } else if (tab === 'tools') {
             rememberHomeScroll();
             setActiveTab('tools');
             setFiltersOpen(false);
             feed.setShowingSaved(false);
-            setAskStoryGroup(null);
-            setActiveChat(null);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }}
