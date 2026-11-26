@@ -58,8 +58,6 @@ main{width:100%;max-width:1200px;flex:1 0 auto;display:flex;flex-direction:colum
 .note{padding:8px 12px;border-radius:8px;font-size:.88rem;background:var(--chip);border-left:4px solid var(--err)}
 .note.info{border-color:var(--mute)}
 .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));scroll-margin-top:150px}
-.grid#grid{display:grid;flex:1 0 auto;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(min-content,1fr) auto;align-content:stretch;gap:0}
-.news-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));align-content:start;gap:16px;margin-bottom:16px}
 .briefing-ask{grid-column:1/-1;width:min(100%,760px);margin:8px auto 16px}
 .ask-mode{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .briefing-ask{position:fixed;left:calc(28px + env(safe-area-inset-left,0px));right:calc(28px + 46px + 12px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:18;width:auto;max-width:760px;margin:0;transform:none}
