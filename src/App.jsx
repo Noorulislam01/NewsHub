@@ -12,6 +12,7 @@ import { useSavedChats } from './features/library/useSavedChats.js';
 import { useNewsFeed } from './features/news/useNewsFeed.js';
 import AuthDialog from './features/auth/components/AuthDialog.jsx';
 import { useAuth } from './features/auth/AuthProvider.jsx';
+import { readSharedArticle } from './shared/sharedArticle.js';
 
 const CATEGORY_NAV_SCROLL_KEY = 'inh_category_nav_scroll';
 
@@ -28,6 +29,7 @@ export default function App() {
   const [authDialogMode, setAuthDialogMode] = useState('signin');
   const [authDialogPrompt, setAuthDialogPrompt] = useState('');
   const [activeChat, setActiveChat] = useState(null);
+  const [sharedArticle, setSharedArticle] = useState(readSharedArticle);
   const [chatSession, setChatSession] = useState(0);
   const installPrompt = useRef(null);
   const categoryNavRef = useRef(null);
@@ -177,6 +179,13 @@ export default function App() {
     feed.reload(true);
   }
 
+  function returnToNews() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('shared');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    setSharedArticle(null);
+  }
+
   function openChat(chat) {
     setActiveChat(chat);
     setFiltersOpen(false);
@@ -257,7 +266,13 @@ export default function App() {
           <span>Feeds loaded: <b>{feed.feedStatus.loaded}</b></span>
           <span>Last updated: <b>{feed.feedStatus.updated}</b></span>
         </div>
-        <div className="category-bar ui" hidden={!feed.categoryNav.length || feed.showingSaved}>
+        {sharedArticle && (
+          <div className="shared-article-banner ui">
+            <span>This article was shared with you. Open the card to visit the publisher.</span>
+            <button type="button" onClick={returnToNews}>Back to news</button>
+          </div>
+        )}
+        <div className="category-bar ui" hidden={!feed.categoryNav.length || feed.showingSaved || Boolean(sharedArticle)}>
           <nav className="category-nav" aria-label="News views and categories" ref={categoryNavRef}>
             {feed.categoryNav.map(button => (
               <button
@@ -284,10 +299,10 @@ export default function App() {
         </div>
         <div className="grid" id="grid">
           <NewsGrid
-            groups={feed.showingSaved && library.loading ? [] : feed.groups}
+            groups={sharedArticle ? [{ main: sharedArticle, others: [] }] : (feed.showingSaved && library.loading ? [] : feed.groups)}
             showingSaved={feed.showingSaved}
-            resetKey={`${feed.activeCategory || ''}|${search}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}`}
-            totalArticles={feed.totalArticles}
+            resetKey={`${sharedArticle?.link || ''}|${feed.activeCategory || ''}|${search}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}`}
+            totalArticles={sharedArticle ? 1 : feed.totalArticles}
             loading={feed.loading || (feed.showingSaved && library.loading)}
             savedArticles={savedArticles}
             readArticleKeys={readLibrary.readKeys}

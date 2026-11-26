@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ArticleSummary from './ArticleSummary.jsx';
 import { articleKey } from '../../../shared/storage.js';
+import { createSharedArticleUrl } from '../../../shared/sharedArticle.js';
 
 function highlightPublisherLink(event) {
   const link = event.currentTarget;
@@ -43,20 +44,58 @@ function ReadStatusButton({ read, onToggle }) {
   );
 }
 
-function SaveButton({ saved, onClick, overlay = false }) {
+function ArticleMenu({ saved, onSave, onShare }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnOutsideClick = event => {
+      if (!menuRef.current?.contains(event.target)) setOpen(false);
+    };
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
   return (
-    <button
-      className={`save-article save-article-icon${overlay ? ' save-article-overlay' : ''}${saved ? ' is-saved' : ''}`}
-      type="button"
-      onClick={onClick}
-      aria-label={saved ? 'Remove saved article' : 'Save article'}
-      aria-pressed={Boolean(saved)}
-      title={saved ? 'Remove saved article' : 'Save article'}
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />
-      </svg>
-    </button>
+    <div className="article-menu-wrap" ref={menuRef}>
+      <button
+        className="article-menu-trigger"
+        type="button"
+        onClick={event => { event.stopPropagation(); setOpen(value => !value); }}
+        aria-label="Article options"
+        aria-expanded={open}
+        title="Article options"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" />
+        </svg>
+      </button>
+      {open && (
+        <div className="article-menu" role="menu" aria-label="Article actions">
+          <button type="button" role="menuitem" onClick={() => { setOpen(false); onSave(); }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />
+            </svg>
+            <span>{saved ? 'Remove from Library' : 'Save this article'}</span>
+          </button>
+          <button type="button" role="menuitem" onClick={() => { setOpen(false); onShare(); }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <path d="m8.7 10.6 6.6-4.2m-6.6 9 6.6 4.2" />
+            </svg>
+            <span>Share this article</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -93,8 +132,39 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
     showCardNotice(saved ? 'Removed from your library' : 'Saved to your library');
   }
 
+  async function shareArticle() {
+    try {
+      const url = createSharedArticleUrl(article);
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: article.title, text: `${article.title} — One News Hub`, url });
+          return;
+        } catch (error) {
+          if (error?.name === 'AbortError') return;
+        }
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = url;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.append(input);
+        input.select();
+        const copied = document.execCommand('copy');
+        input.remove();
+        if (!copied) throw new Error('Clipboard access is unavailable.');
+      }
+      showCardNotice('One News Hub link copied');
+    } catch {
+      showCardNotice('Could not share this article');
+    }
+  }
+
   function openArticle(event) {
-    if (event.target.closest('.save-article,.read-article,.sum-btn,.sum-box,a,button')) return;
+    if (event.target.closest('.article-menu-wrap,.read-article,.sum-btn,.sum-box,a,button')) return;
     window.open(article.link, '_blank', 'noopener,noreferrer');
   }
 
@@ -114,12 +184,12 @@ export default function NewsCard({ article, otherCoverage, saved, read, canSave,
       {article.img && !imageFailed && (
         <div className="card-image">
           <img src={article.img} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setImageFailed(true)} />
-          <SaveButton saved={canSave && saved} onClick={toggleSaved} overlay />
+          <ArticleMenu saved={canSave && saved} onSave={toggleSaved} onShare={shareArticle} />
         </div>
       )}
       <div className="body">
         <div className="card-copy">
-          {(!article.img || imageFailed) && <SaveButton saved={canSave && saved} onClick={toggleSaved} />}
+          {(!article.img || imageFailed) && <ArticleMenu saved={canSave && saved} onSave={toggleSaved} onShare={shareArticle} />}
           <div className="meta ui">
             <span className="pub">{article.pub}</span>
             <span>{article.cats?.[0]}</span>
