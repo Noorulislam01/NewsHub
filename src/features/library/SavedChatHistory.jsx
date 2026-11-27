@@ -30,7 +30,7 @@ export default function SavedChatHistory({ open, authUser, chats = [], loading, 
           <div className="ask-chat-history-list" aria-label="Saved conversations">
             {chats.map(chat => (
               <button className="ask-chat-history-item" type="button" key={chat.id} onClick={() => onOpenChat?.(chat)}>
-                <span>{chat.title || 'News chat'}</span>
+                <span>{chat.title || 'Ask Me chat'}</span>
                 <small>{new Date(chat.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</small>
               </button>
             ))}

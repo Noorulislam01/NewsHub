@@ -254,27 +254,34 @@ export function useNewsFeed(preferences, search, savedArticles, initiallyShowing
     return () => window.removeEventListener('offline', onOffline);
   }, []);
 
-  const visibleArticles = useMemo(() => {
+  const selectedArticles = useMemo(() => {
     if (showingSaved) return savedArticles;
-    const query = search.trim().toLowerCase();
     const categories = preferences.cats.filter(category => category !== 'All News');
     const hours = preferences.range === 'latest' ? 0 : Number(preferences.range);
     const now = Date.now();
     return articles
       .filter(article => preferences.papers.includes(article.pid))
       .filter(article => !categories.length || article.cats.some(category => categories.includes(category)))
-      .filter(article => !activeCategory || article.cats.includes(activeCategory))
       .filter(article => !hours || (article.date && now - article.date <= hours * 36e5))
-      .filter(article => !query || `${article.title} ${article.summary}`.toLowerCase().includes(query))
       .sort((left, right) => (right.date || 0) - (left.date || 0));
-  }, [articles, preferences, search, activeCategory, showingSaved, savedArticles]);
+  }, [articles, preferences, showingSaved, savedArticles]);
+
+  const visibleArticles = useMemo(() => {
+    if (showingSaved) return selectedArticles;
+    const query = search.trim().toLowerCase();
+    return selectedArticles
+      .filter(article => !activeCategory || article.cats.includes(activeCategory))
+      .filter(article => !query || `${article.title} ${article.summary}`.toLowerCase().includes(query));
+  }, [selectedArticles, search, activeCategory, showingSaved]);
 
   const groups = useMemo(() => groupStories(visibleArticles), [visibleArticles]);
+  const allSelectedGroups = useMemo(() => groupStories(selectedArticles), [selectedArticles]);
   const categoryNav = useMemo(() => categoryButtons(articles, preferences, activeCategory, showingSaved), [articles, preferences, activeCategory, showingSaved]);
 
   return {
     articles,
     groups,
+    allSelectedGroups,
     totalArticles: articles.length,
     loading,
     loadingMessage,

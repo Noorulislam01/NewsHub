@@ -17,8 +17,8 @@ export default function AskNewsPage({ hidden = false, authUser, chats, chatsLoad
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div>
-          <h1 id="askNewsPageTitle">Ask News</h1>
-          <p>Ask about stories in your current feed.</p>
+          <h1 id="askNewsPageTitle">Ask Me</h1>
+          <p>Ask about news and research papers.</p>
           </div>
         </div>
       </header>

@@ -29,8 +29,8 @@ export default function AppHeader({ theme, onThemeChange, showTheme = false, sho
   }, [autoHide, filtersOpen]);
 
   useEffect(() => {
-    document.body.classList.toggle('home-header-hidden', autoHide && hidden);
-    return () => document.body.classList.remove('home-header-hidden');
+    document.body.classList.toggle('app-header-hidden', autoHide && hidden);
+    return () => document.body.classList.remove('app-header-hidden');
   }, [autoHide, hidden]);
 
   return (

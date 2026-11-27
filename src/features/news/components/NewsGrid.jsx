@@ -6,7 +6,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_BUTTON_COUNT = 5;
 
-export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead, onExploreStory, focusArticleRequest }) {
+export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles, loading, savedArticles, readArticleKeys, canSave, onSave, onRequireLogin, onRefresh, onToggleRead, onExploreStory, focusArticleRequest, emptyTitle, emptyMessage }) {
   const [pages, setPages] = useState({ feed: 1, library: 1 });
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const pageKey = showingSaved ? 'library' : 'feed';
@@ -50,14 +50,14 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
   }
 
   if (groups.length === 0) {
-    const title = showingSaved ? 'Your library is empty' : (totalArticles ? 'No stories match these filters' : 'Your news feed is ready');
-    const message = showingSaved
+    const title = emptyTitle || (showingSaved ? 'Your library is empty' : (totalArticles ? 'No stories match these filters' : 'Your news feed is ready'));
+    const message = emptyMessage || (showingSaved
       ? 'Use the bookmark button on any news card to add it to your library.'
-      : (totalArticles ? 'Clear a filter or widen the date range.' : 'Load the latest headlines to get started. You can choose publishers and sections in Filters.');
+      : (totalArticles ? 'Clear a filter or widen the date range.' : 'Load the latest headlines to get started. You can choose publishers and sections in Filters.'));
     return (
       <div className="empty ui" style={{ gridColumn: '1 / -1' }}>
         <h2>{title}</h2>
-        {showingSaved ? (
+        {showingSaved && !emptyMessage ? (
           <p className="empty-library-guidance">
             Use the bookmark button <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />

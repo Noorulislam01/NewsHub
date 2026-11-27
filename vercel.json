@@ -10,6 +10,9 @@
     },
     "api/ask-news.mjs": {
       "maxDuration": 60
+    },
+    "api/research.mjs": {
+      "maxDuration": 15
     }
   }
 }

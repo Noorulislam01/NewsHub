@@ -1,10 +1,10 @@
-export default function RefreshButton({ refreshing, onRefresh, aboveNavigation = false }) {
+export default function RefreshButton({ refreshing, onRefresh, aboveNavigation = false, inline = false, itemLabel = 'news' }) {
   return (
     <button
-      className={`refresh-icon${aboveNavigation ? ' refresh-icon-above-navigation' : ''}${refreshing ? ' is-refreshing' : ''}`}
+      className={`refresh-icon${aboveNavigation ? ' refresh-icon-above-navigation' : ''}${inline ? ' refresh-icon-inline' : ''}${refreshing ? ' is-refreshing' : ''}`}
       type="button"
-      aria-label={refreshing ? 'Refreshing news' : 'Refresh news'}
-      title="Refresh news"
+      aria-label={refreshing ? `Refreshing ${itemLabel}` : `Refresh ${itemLabel}`}
+      title={`Refresh ${itemLabel}`}
       disabled={refreshing}
       onClick={onRefresh}
     >

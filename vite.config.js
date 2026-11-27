@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import newsFeed from './api/news-feed.mjs';
 import askNews from './api/ask-news.mjs';
+import research from './api/research.mjs';
 
 function localApiPlugin() {
   return {
@@ -19,6 +20,8 @@ function localApiPlugin() {
           ? newsFeed
           : url.pathname === '/api/ask-news'
             ? askNews
+            : url.pathname === '/api/research'
+              ? research
             : null;
         if (!route) return next();
 

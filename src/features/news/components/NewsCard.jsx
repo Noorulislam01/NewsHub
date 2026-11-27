@@ -33,7 +33,7 @@ function RelatedPublishers({ articles, onCompareCoverage }) {
   );
 }
 
-function SaveArticleButton({ saved, onClick }) {
+export function SaveArticleButton({ saved, onClick }) {
   return (
     <button
       className={`save-article-button${saved ? ' is-saved' : ''}`}
@@ -50,7 +50,7 @@ function SaveArticleButton({ saved, onClick }) {
   );
 }
 
-function ArticleMenu({ read, onToggleRead, onShare }) {
+export function ArticleMenu({ read, onToggleRead, onShare }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 

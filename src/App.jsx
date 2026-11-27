@@ -7,6 +7,7 @@ import BottomNavigation from './components/BottomNavigation.jsx';
 import RefreshButton from './components/RefreshButton.jsx';
 import ToolsPage from './components/ToolsPage.jsx';
 import AskNewsPage from './features/news/components/AskNewsPage.jsx';
+import ResearchPapersPage from './features/news/components/ResearchPapersPage.jsx';
 import { loadPreferences, savePreferences } from './features/preferences/preferences.js';
 import { CATEGORIES, DEFAULT_PAPERS, SOURCES } from './features/news/newsSources.js';
 import { useSavedArticles } from './features/library/useSavedArticles.js';
@@ -19,7 +20,11 @@ import { readSharedArticle } from './shared/sharedArticle.js';
 
 const CATEGORY_NAV_SCROLL_KEY = 'inh_category_nav_scroll';
 const ACTIVE_TAB_KEY = 'inh_active_tab';
-const APP_TABS = new Set(['home', 'library', 'ask', 'tools']);
+const APP_TABS = new Set(['home', 'library', 'ask', 'research', 'tools']);
+
+function isResearchArticle(article) {
+  return article?.kind === 'research';
+}
 
 function getInitialTab() {
   try {
@@ -37,6 +42,10 @@ export default function App() {
   const [draftPreferences, setDraftPreferences] = useState(preferences);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(getInitialTab);
+  const [newsSearchOpen, setNewsSearchOpen] = useState(false);
+  const [newsSearchDraft, setNewsSearchDraft] = useState('');
+  const [newsSearch, setNewsSearch] = useState('');
+  const [librarySection, setLibrarySection] = useState('news');
   const [sourceNavigation, setSourceNavigation] = useState(null);
   const [installAvailable, setInstallAvailable] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
@@ -48,15 +57,24 @@ export default function App() {
   const [chatSession, setChatSession] = useState(0);
   const installPrompt = useRef(null);
   const categoryNavRef = useRef(null);
+  const newsSearchInputRef = useRef(null);
   const categoryNavRestored = useRef(false);
   const homeScrollPosition = useRef(0);
   const restoreHomeScroll = useRef(false);
+  const researchScrollPosition = useRef(0);
+  const restoreResearchScroll = useRef(false);
   const auth = useAuth();
   const library = useSavedArticles(auth);
   const chats = useSavedChats(auth);
   const readLibrary = useReadArticles();
   const { savedArticles } = library;
-  const feed = useNewsFeed(preferences, '', savedArticles, activeTab === 'library');
+  const savedNewsArticles = savedArticles.filter(article => !isResearchArticle(article));
+  const savedResearchArticles = savedArticles.filter(isResearchArticle);
+  const savedNewsGroups = savedNewsArticles.map(main => ({ main, others: [] }));
+  const feed = useNewsFeed(preferences, newsSearch, savedArticles, activeTab === 'library');
+  useEffect(() => {
+    if (newsSearchOpen) newsSearchInputRef.current?.focus();
+  }, [newsSearchOpen]);
   useLayoutEffect(() => {
     const nav = categoryNavRef.current;
     if (!nav || !feed.categoryNav.length || categoryNavRestored.current) return;
@@ -71,8 +89,22 @@ export default function App() {
 
   useLayoutEffect(() => {
     if (activeTab !== 'home' || !restoreHomeScroll.current) return;
-    window.scrollTo({ top: homeScrollPosition.current, behavior: 'auto' });
+    const previousPosition = homeScrollPosition.current;
+    window.scrollTo({ top: previousPosition, behavior: 'auto' });
     restoreHomeScroll.current = false;
+    if (previousPosition <= 0) return;
+    const frame = window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab]);
+
+  useLayoutEffect(() => {
+    if (activeTab !== 'research' || !restoreResearchScroll.current) return;
+    const previousPosition = researchScrollPosition.current;
+    window.scrollTo({ top: previousPosition, behavior: 'auto' });
+    restoreResearchScroll.current = false;
+    if (previousPosition <= 0) return;
+    const frame = window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    return () => window.cancelAnimationFrame(frame);
   }, [activeTab]);
 
   useLayoutEffect(() => {
@@ -207,8 +239,13 @@ export default function App() {
     if (activeTab === 'home' && !filtersOpen) homeScrollPosition.current = window.scrollY;
   }
 
+  function rememberCurrentSectionScroll() {
+    if (activeTab === 'home') rememberHomeScroll();
+    if (activeTab === 'research') researchScrollPosition.current = window.scrollY;
+  }
+
   function navigate(action) {
-    if (action !== 'home') rememberHomeScroll();
+    rememberCurrentSectionScroll();
     setSourceNavigation(null);
     if (action === 'home') {
       const alreadyOnHome = activeTab === 'home';
@@ -294,8 +331,15 @@ export default function App() {
   }
 
   function openChatSource(url) {
-    const matchingGroup = feed.groups.find(({ main, others }) => main.link === url || others.some(article => article.link === url));
+    const findGroup = groups => groups.find(({ main, others }) => main.link === url || others.some(article => article.link === url));
+    const currentGroup = findGroup(feed.groups);
+    const matchingGroup = currentGroup || findGroup(feed.allSelectedGroups);
     if (!matchingGroup) return false;
+    if (!currentGroup) {
+      feed.setActiveCategory(null);
+      setNewsSearch('');
+      setNewsSearchDraft('');
+    }
     const cardUrl = matchingGroup.main.link;
     setActiveTab('home');
     setFiltersOpen(false);
@@ -335,7 +379,7 @@ export default function App() {
         onThemeChange={changeTheme}
         showFilter={activeTab === 'home' && !feed.showingSaved && !sharedArticle}
         filtersOpen={filtersOpen}
-        autoHide={activeTab === 'home' && !filtersOpen}
+        autoHide={(activeTab === 'home' || activeTab === 'research') && !filtersOpen}
         onFilterToggle={() => filtersOpen ? cancelFilters() : openFilters()}
       />
       <FilterPanel
@@ -349,12 +393,26 @@ export default function App() {
         onCancel={cancelFilters}
       />
       <main id="contentMain" className={activeTab === 'ask' ? 'ask-tab-mode' : ''}>
-        {(activeTab === 'home' || activeTab === 'library') && <div className="stats ui">
-          <span>Articles: <b>{feed.showingSaved ? savedArticles.length : feed.groups.length}</b></span>
+        {activeTab === 'home' && <div className="stats ui">
+          <span>Articles: <b>{feed.groups.length}</b></span>
           <span>Newspapers selected: <b>{preferences.papers.length}</b></span>
           <span>Feeds loaded: <b>{feed.feedStatus.loaded}</b></span>
           <span>Last updated: <b>{feed.feedStatus.updated}</b></span>
         </div>}
+        {activeTab === 'library' && <>
+          <div className="library-heading-group ui">
+            <h1 id="librarySectionTitle" className="library-heading">{librarySection === 'research' ? 'Saved Research' : 'Saved News'}</h1>
+            <p>{librarySection === 'research' ? 'Research papers saved to your Library.' : 'News articles saved to your Library.'}</p>
+          </div>
+          <nav className="library-section-tabs ui" aria-label="Library sections">
+          <button className={librarySection === 'news' ? 'is-active' : ''} type="button" aria-pressed={librarySection === 'news'} onClick={() => setLibrarySection('news')}>
+            <span>News</span><small>{savedNewsArticles.length}</small>
+          </button>
+          <button className={librarySection === 'research' ? 'is-active' : ''} type="button" aria-pressed={librarySection === 'research'} onClick={() => setLibrarySection('research')}>
+            <span>Research</span><small>{savedResearchArticles.length}</small>
+          </button>
+          </nav>
+        </>}
         <div className="category-bar ui" hidden={activeTab !== 'home' || feed.showingSaved || Boolean(sharedArticle)}>
           <nav className="category-nav" aria-label="News views and categories" ref={categoryNavRef} hidden={!feed.categoryNav.length}>
             {feed.categoryNav.map(button => (
@@ -376,17 +434,17 @@ export default function App() {
         </div>
         {(activeTab === 'home' || activeTab === 'library') && <div className="notes ui" id="notes" aria-live="polite">
           {library.error && <div className="note" role="alert">{library.error}</div>}
-          {chats.error && <div className="note" role="alert">{chats.error}</div>}
-          {feed.loadingMessage && <div className="note info">{feed.loadingMessage}</div>}
-          {feed.notes.map(note => <div className={`note${note.info ? ' info' : ''}`} key={note.id}>{note.message}</div>)}
+          {activeTab === 'home' && chats.error && <div className="note" role="alert">{chats.error}</div>}
+          {activeTab === 'home' && feed.loadingMessage && <div className="note info">{feed.loadingMessage}</div>}
+          {activeTab === 'home' && feed.notes.map(note => <div className={`note${note.info ? ' info' : ''}`} key={note.id}>{note.message}</div>)}
         </div>}
-        <div className={`grid${sharedArticle ? ' shared-article-grid' : ''}`} id="grid" hidden={activeTab !== 'home' && activeTab !== 'library'}>
+        <div className={`grid${sharedArticle ? ' shared-article-grid' : ''}`} id="grid" hidden={activeTab !== 'home' && (activeTab !== 'library' || librarySection === 'research')}>
           <NewsGrid
-            groups={sharedArticle ? [{ main: sharedArticle, others: [] }] : (feed.showingSaved && library.loading ? [] : feed.groups)}
-            showingSaved={feed.showingSaved}
-            resetKey={`${sharedArticle?.link || ''}|${feed.activeCategory || ''}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}`}
-            totalArticles={sharedArticle ? 1 : feed.totalArticles}
-            loading={feed.loading || (feed.showingSaved && library.loading)}
+            groups={sharedArticle ? [{ main: sharedArticle, others: [] }] : (activeTab === 'library' ? (library.loading ? [] : savedNewsGroups) : feed.groups)}
+            showingSaved={activeTab === 'library'}
+            resetKey={`${sharedArticle?.link || ''}|${feed.activeCategory || ''}|${preferences.range}|${preferences.papers.join(',')}|${preferences.cats.join(',')}|${sourceNavigation?.id || ''}|${librarySection}|${newsSearch}`}
+            totalArticles={sharedArticle ? 1 : activeTab === 'library' ? savedNewsArticles.length : feed.totalArticles}
+            loading={activeTab === 'library' ? library.loading : feed.loading}
             savedArticles={savedArticles}
             readArticleKeys={readLibrary.readKeys}
             canSave={Boolean(auth.user)}
@@ -396,6 +454,8 @@ export default function App() {
             onRefresh={refreshNews}
             onExploreStory={exploreStory}
             focusArticleRequest={sourceNavigation}
+            emptyTitle={activeTab === 'library' && savedResearchArticles.length ? 'No news saved yet' : undefined}
+            emptyMessage={activeTab === 'library' && savedResearchArticles.length ? 'Save news cards from Home to see them in this Library section.' : undefined}
           />
           {sharedArticle && (
             <div className="shared-article-banner ui">
@@ -404,12 +464,54 @@ export default function App() {
             </div>
           )}
         </div>
+        <ResearchPapersPage
+          hidden={!(activeTab === 'library' && librarySection === 'research')}
+          enabled={false}
+          mode="library"
+          savedArticles={savedResearchArticles}
+          readKeys={readLibrary.readKeys}
+          canSave={Boolean(auth.user)}
+          onSave={library.saveArticle}
+          onToggleRead={readLibrary.toggleReadArticle}
+          onRequireLogin={requireLogin}
+        />
         <AskNewsPage hidden={activeTab !== 'ask'} authUser={auth.user} chats={chats.savedChats} chatsLoading={chats.loading} onOpenChat={openChat} onRequireLogin={requireLogin}>
           <BriefingAsk key={activeChat?.id || `new-chat-${chatSession}`} groups={askStoryGroup ? [askStoryGroup] : feed.groups} storyGroup={askStoryGroup} pageMode canAsk={Boolean(auth.user)} onRequireLogin={requireLogin} savedChat={activeChat} onSaveChat={chats.saveChat} onOpenSource={openChatSource} onNewChat={startNewChat} onClearStoryGroup={clearAskStoryGroup} />
         </AskNewsPage>
+        <ResearchPapersPage
+          hidden={activeTab !== 'research'}
+          enabled={activeTab === 'research'}
+          savedArticles={savedArticles}
+          readKeys={readLibrary.readKeys}
+          canSave={Boolean(auth.user)}
+          onSave={library.saveArticle}
+          onToggleRead={readLibrary.toggleReadArticle}
+          onRequireLogin={requireLogin}
+        />
         {activeTab === 'tools' && <ToolsPage authUser={auth.user} theme={preferences.theme} onThemeChange={changeTheme} installAvailable={installAvailable} onInstall={installApp} onSignOut={signOut} onRequireLogin={requireLogin} />}
       </main>
-      {activeTab === 'home' && !filtersOpen && <RefreshButton aboveNavigation refreshing={feed.loading} onRefresh={refreshNews} />}
+      {activeTab === 'home' && !filtersOpen && !feed.showingSaved && !sharedArticle && <form className={`research-search home-news-search${newsSearchOpen ? ' is-open' : ''}`} role="search" onSubmit={event => {
+        event.preventDefault();
+        if (!newsSearchOpen) return;
+        setNewsSearch(newsSearchDraft.trim());
+      }}>
+        <input
+          ref={newsSearchInputRef}
+          type="text"
+          inputMode="search"
+          value={newsSearchDraft}
+          onChange={event => setNewsSearchDraft(event.target.value)}
+          placeholder="Search news..."
+          aria-label="Search news"
+        />
+        {newsSearchOpen && <button className="research-close" type="button" aria-label="Close news search" title="Close search" onClick={() => setNewsSearchOpen(false)}>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>}
+        {newsSearchOpen && <RefreshButton inline refreshing={feed.loading} onRefresh={refreshNews} />}
+        <button className="btn primary research-submit" type={newsSearchOpen ? 'submit' : 'button'} aria-label={newsSearchOpen ? 'Search news' : 'Open news search'} aria-expanded={newsSearchOpen} title="Search news" disabled={newsSearchOpen && feed.loading} onClick={() => { if (!newsSearchOpen) setNewsSearchOpen(true); }}>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3" /><path d="m15.4 15.4 4.1 4.1" /></svg>
+        </button>
+      </form>}
       <BottomNavigation
         activeTab={activeTab}
         savedCount={savedArticles.length}
@@ -420,18 +522,30 @@ export default function App() {
           else if (tab === 'library') navigate('saved');
           else if (tab === 'ask') {
             if (activeTab !== 'ask') {
-              rememberHomeScroll();
+              rememberCurrentSectionScroll();
               setActiveTab('ask');
               setFiltersOpen(false);
               feed.setShowingSaved(false);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }
           } else if (tab === 'tools') {
-            rememberHomeScroll();
+            rememberCurrentSectionScroll();
             setActiveTab('tools');
             setFiltersOpen(false);
             feed.setShowingSaved(false);
             window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (tab === 'research') {
+            if (activeTab === 'research') {
+              researchScrollPosition.current = 0;
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              return;
+            }
+            rememberCurrentSectionScroll();
+            restoreResearchScroll.current = researchScrollPosition.current > 0;
+            setActiveTab('research');
+            setFiltersOpen(false);
+            feed.setShowingSaved(false);
+            if (!restoreResearchScroll.current) window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }}
       />

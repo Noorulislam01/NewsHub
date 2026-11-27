@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
 const TAB_ICONS = {
-  home: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9M9 20v-6h6v6" /></>,
+  home: <><path d="M4 4.75A1.75 1.75 0 0 1 5.75 3h12.5A1.75 1.75 0 0 1 20 4.75v14.5A1.75 1.75 0 0 1 18.25 21H5.75A1.75 1.75 0 0 1 4 19.25V4.75Z" /><path d="M8 7h8M8 10.5h8M8 14h3v4H8zM14 14h2M14 17h2" /></>,
   library: <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" />,
   ask: <><path d="M5 5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75v7.5A2.75 2.75 0 0 1 16.25 16H10l-5 4v-6.5A2.75 2.75 0 0 1 5 13V5.75Z" /><path d="M8 8h8M8 11.5h5" /></>,
+  research: <><path d="M9 3h6M10 3v6.2l-4.4 7.1A3.1 3.1 0 0 0 8.2 21h7.6a3.1 3.1 0 0 0 2.6-4.7L14 9.2V3" /><path d="M8.3 15h7.4M10 12h4" /></>,
   tools: <><circle cx="12" cy="8" r="3.5" /><path d="M5 21v-1.5a7 7 0 0 1 14 0V21" /></>
 };
 
@@ -59,7 +60,7 @@ export default function BottomNavigation({ activeTab, savedCount, authUser, save
     <nav className="bottom-navigation-shell ui" aria-label="Main navigation">
       <div className="bottom-navigation">
         {[
-          ['home', 'Home'], ['ask', 'Ask News'], ['library', 'Library'], ['tools', 'Account']
+          ['home', 'News'], ['research', 'Research'], ['ask', 'Ask Me'], ['library', 'Library'], ['tools', 'Account']
         ].map(([tab, label]) => <button
           className={`bottom-tab${activeTab === tab ? ' is-active' : ''}`}
           type="button"

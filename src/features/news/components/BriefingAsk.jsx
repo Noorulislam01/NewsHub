@@ -46,6 +46,37 @@ function toNewsSources(groups, question) {
   }).slice(0, 30);
 }
 
+function toResearchSources(papers, question) {
+  const queryTokens = [...tokens(question)].filter(token => !QUERY_STOP_WORDS.has(token));
+  const ranked = papers.map(paper => {
+    const titleTokens = tokens(paper.title);
+    const categoryTokens = tokens((paper.categories || []).join(' '));
+    const abstractTokens = tokens(paper.abstract);
+    const score = queryTokens.reduce((total, token) => total
+      + (titleTokens.has(token) ? 5 : 0)
+      + (categoryTokens.has(token) ? 4 : 0)
+      + (abstractTokens.has(token) ? 2 : 0), 0);
+    return { paper, score };
+  });
+  const matched = ranked.filter(item => item.score > 0)
+    .sort((left, right) => right.score - left.score || (right.paper.date || '').localeCompare(left.paper.date || ''));
+  const selected = (matched.length ? matched : ranked.sort((left, right) => (right.paper.date || '').localeCompare(left.paper.date || ''))).slice(0, 15);
+  return selected.map(({ paper }) => ({
+    title: paper.title,
+    publisher: paper.source || 'Research repository',
+    sourceType: paper.recordType || 'Research paper',
+    category: (paper.categories || []).join(', '),
+    date: paper.date || 'Date unavailable',
+    excerpt: paper.abstract || 'No abstract is available for this paper.',
+    url: paper.url,
+    alsoCoveredBy: []
+  }));
+}
+
+function toAskSources(groups, papers, question) {
+  return [...toNewsSources(groups, question).slice(0, 15), ...toResearchSources(papers, question)].slice(0, 30);
+}
+
 function normalizeAnswer(text) {
   return String(text || '')
     .replace(/\\\r?\n/g, '\n')
@@ -106,6 +137,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
   const requestController = useRef(null);
   const answerCardRef = useRef(null);
   const saveQueueRef = useRef(Promise.resolve());
+  const researchCache = useRef({ expiresAt: 0, papers: [] });
 
   useEffect(() => {
     if (!savedChat?.id) return;
@@ -146,7 +178,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
     const snapshot = conversation.map(message => ({ ...message, sourceNavigation: 'publisher' }));
     saveQueueRef.current = saveQueueRef.current
       .catch(() => null)
-      .then(() => onSaveChat({ id, title: conversation[0]?.question || 'News chat', messages: snapshot }))
+      .then(() => onSaveChat({ id, title: conversation[0]?.question || 'Ask Me chat', messages: snapshot }))
       .then(saved => {
         setSaveState(saved ? 'saved' : 'error');
         return saved;
@@ -171,7 +203,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
     setMinimized(false);
     setStatus('loading');
     if (!supabase) {
-      updateMessage(turnId, { status: 'error', error: 'Sign-in is not configured, so Ask News is unavailable.' });
+      updateMessage(turnId, { status: 'error', error: 'Sign-in is not configured, so Ask Me is unavailable.' });
       setStatus('done');
       return;
     }
@@ -195,6 +227,23 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
       setChatId(currentChatId);
       void saveConversation(pendingMessages, currentChatId);
 
+      let researchPapers = [];
+      if (researchCache.current.expiresAt > Date.now()) {
+        researchPapers = researchCache.current.papers;
+      } else {
+        try {
+          const researchResponse = await fetch('/api/research?category=all&limit=30', { signal: controller.signal });
+          if (researchResponse.ok) {
+            const researchPayload = await researchResponse.json();
+            researchPapers = Array.isArray(researchPayload.papers) ? researchPayload.papers : [];
+            researchCache.current = { expiresAt: Date.now() + 5 * 60 * 1000, papers: researchPapers };
+          }
+        } catch (researchError) {
+          if (researchError?.name === 'AbortError') throw researchError;
+          // Continue with news sources if research services are temporarily unavailable.
+        }
+      }
+
       const response = await fetch('/api/ask-news', {
         method: 'POST',
         signal: controller.signal,
@@ -205,13 +254,13 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
         body: JSON.stringify({
           question: trimmedQuestion,
           history: messages.filter(message => message.status === 'done').slice(-4).map(({ question: previousQuestion, answer }) => ({ question: previousQuestion, answer })),
-          stories: toNewsSources(groups, trimmedQuestion)
+          stories: toAskSources(groups, researchPapers, trimmedQuestion)
         })
       });
       let result = {};
       try { result = await response.json(); } catch {}
       if (!response.ok || !result.answer) {
-        if (response.status === 404) throw new Error('Ask News is not available on this deployment yet.');
+        if (response.status === 404) throw new Error('Ask Me is not available on this deployment yet.');
         throw new Error(result.error || 'Could not answer from the briefing.');
       }
       const completed = { id: turnId, question: trimmedQuestion, status: 'done', answer: result.answer, sources: Array.isArray(result.sources) ? result.sources : [], sourceNavigation: 'card', error: '' };
@@ -237,7 +286,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
       {!pageMode && <div className="briefing-ask-heading">
         <div>
           <h3 id="briefingAskTitle">{storyGroup ? 'Compare story coverage' : 'Ask about these stories'}</h3>
-          <p>{storyGroup ? storyGroup.main.title : 'Answers use the briefing excerpts and link back to publishers.'}</p>
+          <p>{storyGroup ? storyGroup.main.title : 'Answers use news and research sources, with links to their publishers.'}</p>
         </div>
         {storyGroup && <button className="briefing-ask-clear-scope" type="button" onClick={onClearStoryGroup}>Ask across current feed</button>}
       </div>}
@@ -248,7 +297,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
       {messages.length > 0 && (
         <div className={`briefing-answer${minimized ? ' is-minimized' : ''}${pageMode ? ' briefing-answer-inline' : ''}`} aria-live="polite" ref={answerCardRef}>
           {!pageMode ? <div className="briefing-answer-toolbar">
-            <strong>News chat</strong>
+            <strong>Ask Me chat</strong>
             <div className="briefing-answer-toolbar-actions">
               {messages.length > 0 && <button className="briefing-answer-save-retry" type="button" onClick={() => saveConversation()} disabled={!canAsk || status === 'loading' || saveState === 'saving' || saveState === 'saved'} title={saveState === 'error' ? 'Retry saving this conversation' : 'Save this conversation'}>{saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Retry save' : 'Save chat'}</button>}
               {saveState === 'error' && <span className="briefing-chat-save-state is-error" role="status">Couldn’t save</span>}
@@ -264,7 +313,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
             <section className="briefing-chat-turn" key={message.id}>
               <p className="briefing-chat-question">{message.question}</p>
               <div className="briefing-chat-response">
-                {message.status === 'loading' && <p className="briefing-ask-state" role="status">Searching the news and preparing an answer…</p>}
+                {message.status === 'loading' && <p className="briefing-ask-state" role="status">Searching news and research papers…</p>}
                 {message.status === 'error' && <p className="briefing-ask-error" role="alert">{message.error}</p>}
                 {message.answer && <AnswerText text={message.answer} />}
                 {message.sources.length > 0 && (
@@ -273,8 +322,8 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
                     <ol>
                       {message.sources.map((source, index) => (
                         <li key={`${source.url}-${index}`} value={source.id || index + 1}>
-                          <a href={source.url} target="_blank" rel="noopener noreferrer" onClick={event => { if (message.sourceNavigation === 'card' && onOpenSource?.(source.url)) event.preventDefault(); }}>{source.title}</a>
-                          <span> — {source.publisher}{source.alsoCoveredBy?.length ? `; also covered by ${source.alsoCoveredBy.join(', ')}` : ''}</span>
+                          <a href={source.url} target="_blank" rel="noopener noreferrer" onClick={event => { if (onOpenSource?.(source.url)) event.preventDefault(); }}>{source.title}</a>
+                          <span> — {source.publisher}{source.sourceType ? ` · ${source.sourceType}` : ''}{source.alsoCoveredBy?.length ? `; also covered by ${source.alsoCoveredBy.join(', ')}` : ''}</span>
                         </li>
                       ))}
                     </ol>
@@ -288,7 +337,7 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
       <form className="briefing-ask-form" onSubmit={handleSubmit}>
         <div className="ask-news-composer-row">
           <div className="briefing-composer">
-            <label className="sr-only" htmlFor="briefingQuestion">Your question about the news</label>
+            <label className="sr-only" htmlFor="briefingQuestion">Ask about news or research</label>
             <input
               type="text"
               id="briefingQuestion"
@@ -297,9 +346,9 @@ export default function BriefingAsk({ groups, canAsk, onRequireLogin, savedChat,
               maxLength={500}
               autoComplete="off"
               enterKeyHint="send"
-              placeholder="Ask about news in your current feed..."
+              placeholder="Ask about news or research papers..."
             />
-            <button className={`briefing-ask-submit${status === 'loading' ? ' is-loading' : ''}`} type="submit" aria-label={status === 'loading' ? 'Preparing answer' : 'Ask about the briefing'} title={status === 'loading' ? 'Preparing answer' : canAsk && !groups.length ? 'Load news before asking' : 'Ask about the briefing'} aria-busy={status === 'loading'} disabled={status === 'loading' || question.trim().length < 3 || (canAsk && !groups.length)}>
+            <button className={`briefing-ask-submit${status === 'loading' ? ' is-loading' : ''}`} type="submit" aria-label={status === 'loading' ? 'Preparing answer' : 'Ask Me'} title={status === 'loading' ? 'Preparing answer' : 'Ask Me about news or research'} aria-busy={status === 'loading'} disabled={status === 'loading' || question.trim().length < 3}>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
               </svg>

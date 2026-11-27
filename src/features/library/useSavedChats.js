@@ -59,7 +59,7 @@ export function useSavedChats(auth) {
         .upsert({
           id: chat.id,
           user_id: userId,
-          title: String(chat.title || 'News chat').slice(0, 180),
+          title: String(chat.title || 'Ask Me chat').slice(0, 180),
           messages: chat.messages,
           updated_at: new Date().toISOString()
         })
