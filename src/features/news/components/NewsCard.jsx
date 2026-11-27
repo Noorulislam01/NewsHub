@@ -140,7 +140,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, showingS
       onRequireLogin?.('Sign in to save this article.');
       return;
     }
-    if (showingSaved && saved) {
+    if (saved) {
       setConfirmUnsave(true);
       return;
     }

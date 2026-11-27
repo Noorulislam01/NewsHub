@@ -112,7 +112,7 @@ function savedArticleToPaper(article) {
   };
 }
 
-function PaperCard({ paper, savedArticles, readKeys, canSave, onSave, onToggleRead, onRequireLogin, showingSaved }) {
+function PaperCard({ paper, savedArticles, readKeys, canSave, onSave, onToggleRead, onRequireLogin }) {
   const article = paper.article || articleForPaper(paper);
   const saved = savedArticles.some(item => articleKey(item) === articleKey(article));
   const read = readKeys.has(articleKey(article));
@@ -133,7 +133,7 @@ function PaperCard({ paper, savedArticles, readKeys, canSave, onSave, onToggleRe
       onRequireLogin?.('Sign in to save this research paper.');
       return;
     }
-    if (showingSaved && saved) {
+    if (saved) {
       setConfirmUnsave(true);
       return;
     }
@@ -449,7 +449,6 @@ export default function ResearchPapersPage({ hidden = false, enabled = true, mod
           onSave={onSave}
           onToggleRead={onToggleRead}
           onRequireLogin={onRequireLogin}
-          showingSaved={libraryMode}
         />)}
       </div>}
       {pageCount > 1 && <nav className="pagination research-pagination" aria-label="Research paper pages">
