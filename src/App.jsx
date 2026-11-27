@@ -56,7 +56,7 @@ export default function App() {
   const chats = useSavedChats(auth);
   const readLibrary = useReadArticles();
   const { savedArticles } = library;
-  const feed = useNewsFeed(preferences, '', savedArticles);
+  const feed = useNewsFeed(preferences, '', savedArticles, activeTab === 'library');
   useLayoutEffect(() => {
     const nav = categoryNavRef.current;
     if (!nav || !feed.categoryNav.length || categoryNavRestored.current) return;

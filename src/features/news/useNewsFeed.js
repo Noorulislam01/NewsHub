@@ -95,7 +95,7 @@ function categoryButtons(articles, preferences, activeCategory, showingSaved) {
   ];
 }
 
-export function useNewsFeed(preferences, search, savedArticles) {
+export function useNewsFeed(preferences, search, savedArticles, initiallyShowingSaved = false) {
   const preferencesRef = useRef(preferences);
   const requestId = useRef(0);
   const initialLoadStarted = useRef(false);
@@ -114,7 +114,7 @@ export function useNewsFeed(preferences, search, savedArticles) {
       ? saved
       : null;
   });
-  const [showingSaved, setShowingSaved] = useState(false);
+  const [showingSaved, setShowingSaved] = useState(initiallyShowingSaved);
 
   preferencesRef.current = preferences;
   newsService.current ||= createNewsService({ cache, getRange: () => preferencesRef.current.range });
