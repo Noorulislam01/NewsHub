@@ -404,6 +404,11 @@ body.filters-open{overflow:hidden}
 .auth-success{border-color:color-mix(in srgb,var(--ok) 35%,var(--line));color:var(--ok)}
 .auth-field{display:grid;gap:6px;margin-bottom:14px;color:var(--ink);font-size:.86rem;font-weight:650}
 .auth-field input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:1rem}
+.auth-password-control{position:relative;min-width:0}
+.auth-password-control input{padding-right:48px}
+.auth-password-toggle{position:absolute;top:50%;right:7px;width:34px;height:34px;display:grid;place-items:center;transform:translateY(-50%);border:0;border-radius:8px;background:transparent;color:var(--mute);cursor:pointer}
+.auth-password-toggle:hover,.auth-password-toggle:focus-visible{background:var(--chip);color:var(--accent);outline:none}
+.auth-password-toggle svg{width:19px;height:19px}
 .auth-field input:focus{outline:2px solid color-mix(in srgb,var(--accent) 28%,transparent);border-color:var(--accent)}
 .auth-submit{width:100%;min-height:44px;margin-top:2px}
 .auth-submit:disabled{opacity:.55;cursor:not-allowed}
@@ -507,6 +512,12 @@ body.filters-open{overflow:hidden}
 .tools-page-account-details h2{margin:0;font-size:.98rem;line-height:1.35}
 .tools-page-account-details p{margin:4px 0 0;color:var(--mute);font-size:.84rem;overflow-wrap:anywhere}
 .tools-page-account-profile>.tools-page-secondary{flex:none;margin-left:auto}
+.tools-page-password-action{width:100%;min-height:64px;margin-top:15px;padding:13px 0 0;display:flex;align-items:center;gap:12px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;cursor:pointer}
+.tools-page-password-action>span:nth-child(2){min-width:0;display:grid;gap:3px}
+.tools-page-password-action strong{font:650 .9rem system-ui,-apple-system,"Segoe UI",sans-serif}
+.tools-page-password-action small{color:var(--mute);font:400 .78rem system-ui,-apple-system,"Segoe UI",sans-serif}
+.tools-page-password-action:hover,.tools-page-password-action:focus-visible{color:var(--accent);outline:none}
+.tools-page-password-action .tools-page-chevron{margin-left:auto;color:var(--mute);font-size:1.3rem}
 .tools-page-group-heading{margin:0 0 10px;font-size:.9rem;font-weight:650}
 .tools-page-appearance{min-height:70px;margin-bottom:22px;padding:12px 15px;display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}
 .tools-page-appearance-copy{min-width:0;display:grid;gap:3px}

@@ -7,6 +7,18 @@ const TITLES = {
   recovery: 'Choose a new password'
 };
 
+function PasswordVisibilityButton({ visible, onClick }) {
+  return (
+    <button className="auth-password-toggle" type="button" onClick={onClick} aria-label={visible ? 'Hide password' : 'Show password'} title={visible ? 'Hide password' : 'Show password'}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M2.5 12s3.2-6 9.5-6 9.5 6 9.5 6-3.2 6-9.5 6-9.5-6-9.5-6Z" />
+        <circle cx="12" cy="12" r="2.5" />
+        {!visible && <path d="m4 4 16 16" />}
+      </svg>
+    </button>
+  );
+}
+
 export default function AuthDialog({
   open,
   initialMode = 'signin',
@@ -23,6 +35,8 @@ export default function AuthDialog({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -35,6 +49,8 @@ export default function AuthDialog({
     setError('');
     setPassword('');
     setConfirmPassword('');
+    setPasswordVisible(false);
+    setConfirmPasswordVisible(false);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     requestAnimationFrame(() => firstField.current?.focus());
@@ -56,6 +72,8 @@ export default function AuthDialog({
     setError('');
     setPassword('');
     setConfirmPassword('');
+    setPasswordVisible(false);
+    setConfirmPasswordVisible(false);
   }
 
   async function submit(event) {
@@ -107,7 +125,7 @@ export default function AuthDialog({
         <button className="auth-close" type="button" aria-label="Close account dialog" onClick={onClose} disabled={busy}>×</button>
         <div className="auth-brand-mark" aria-hidden="true">ON</div>
         <h2 id="authTitle">{TITLES[mode]}</h2>
-        <p className="auth-intro">Sign in or create a One News Hub account. You can continue reading news without signing in.</p>
+        <p className="auth-intro">{mode === 'recovery' ? 'Choose a new password for your One News Hub account.' : 'Sign in or create a One News Hub account. You can continue reading news without signing in.'}</p>
 
         {promptMessage && <div className="auth-setup-note" role="status">{promptMessage}</div>}
         {!configured && <div className="auth-setup-note">Supabase is not connected yet. Add the project URL and publishable key to the app environment to enable account actions.</div>}
@@ -131,28 +149,37 @@ export default function AuthDialog({
           {needsPassword && (
             <label className="auth-field">
               <span>Password</span>
-              <input
-                type="password"
-                name="password"
-                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                minLength={8}
-                required
-                value={password}
-                onChange={event => setPassword(event.target.value)}
-                disabled={busy}
-              />
+              <div className="auth-password-control">
+                <input
+                  type={passwordVisible ? 'text' : 'password'}
+                  name="password"
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  minLength={8}
+                  required
+                  value={password}
+                  onChange={event => setPassword(event.target.value)}
+                  disabled={busy}
+                />
+                <PasswordVisibilityButton visible={passwordVisible} onClick={() => setPasswordVisible(value => !value)} />
+              </div>
             </label>
           )}
           {mode === 'recovery' && (
             <label className="auth-field">
               <span>New password</span>
-              <input ref={firstField} type="password" name="new-password" autoComplete="new-password" minLength={8} required value={password} onChange={event => setPassword(event.target.value)} disabled={busy} />
+              <div className="auth-password-control">
+                <input ref={firstField} type={passwordVisible ? 'text' : 'password'} name="new-password" autoComplete="new-password" minLength={8} required value={password} onChange={event => setPassword(event.target.value)} disabled={busy} />
+                <PasswordVisibilityButton visible={passwordVisible} onClick={() => setPasswordVisible(value => !value)} />
+              </div>
             </label>
           )}
           {needsNewPassword && (
             <label className="auth-field">
               <span>Confirm password</span>
-              <input type="password" name="confirm-password" autoComplete="new-password" minLength={8} required value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} disabled={busy} />
+              <div className="auth-password-control">
+                <input type={confirmPasswordVisible ? 'text' : 'password'} name="confirm-password" autoComplete="new-password" minLength={8} required value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} disabled={busy} />
+                <PasswordVisibilityButton visible={confirmPasswordVisible} onClick={() => setConfirmPasswordVisible(value => !value)} />
+              </div>
             </label>
           )}
 

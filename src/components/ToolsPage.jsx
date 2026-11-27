@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 function ActionIcon({ type }) {
   const paths = {
     account: <><circle cx="12" cy="8" r="3.5" /><path d="M5 21v-1.5a7 7 0 0 1 14 0V21" /></>,
+    password: <><circle cx="8" cy="15" r="4" /><path d="m11 12 8-8 2 2-2 2 2 2-3 3-2-2-2 2" /></>,
     appearance: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></>,
     install: <path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4" />,
     share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.7 10.6 6.6-4.2m-6.6 9 6.6 4.2" /></>
@@ -10,7 +11,7 @@ function ActionIcon({ type }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[type]}</svg>;
 }
 
-export default function ToolsPage({ authUser, theme, onThemeChange, installAvailable, onInstall, onSignOut, onRequireLogin }) {
+export default function ToolsPage({ authUser, theme, onThemeChange, installAvailable, onInstall, onSignOut, onRequireLogin, onChangePassword }) {
   const [shareFeedback, setShareFeedback] = useState('');
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -103,6 +104,11 @@ export default function ToolsPage({ authUser, theme, onThemeChange, installAvail
             ? <button className="tools-page-secondary" type="button" onClick={() => setSignOutOpen(true)}>Sign out</button>
             : <button className="tools-page-secondary" type="button" onClick={() => onRequireLogin?.()}>Sign in</button>}
         </div>
+        {authUser && <button className="tools-page-password-action" type="button" onClick={onChangePassword}>
+          <span className="tools-page-icon"><ActionIcon type="password" /></span>
+          <span><strong>Change password</strong><small>Set a new password for your account</small></span>
+          <span className="tools-page-chevron" aria-hidden="true">›</span>
+        </button>}
       </section>
       <h2 className="tools-page-group-heading">Preferences</h2>
       <div className="tools-page-appearance">

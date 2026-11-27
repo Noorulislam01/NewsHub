@@ -235,6 +235,12 @@ export default function App() {
     setAuthDialogOpen(true);
   }
 
+  function openPasswordChange() {
+    setAuthDialogMode('recovery');
+    setAuthDialogPrompt('');
+    setAuthDialogOpen(true);
+  }
+
   function rememberHomeScroll() {
     if (activeTab === 'home' && !filtersOpen) homeScrollPosition.current = window.scrollY;
   }
@@ -488,7 +494,7 @@ export default function App() {
           onToggleRead={readLibrary.toggleReadArticle}
           onRequireLogin={requireLogin}
         />
-        {activeTab === 'tools' && <ToolsPage authUser={auth.user} theme={preferences.theme} onThemeChange={changeTheme} installAvailable={installAvailable} onInstall={installApp} onSignOut={signOut} onRequireLogin={requireLogin} />}
+        {activeTab === 'tools' && <ToolsPage authUser={auth.user} theme={preferences.theme} onThemeChange={changeTheme} installAvailable={installAvailable} onInstall={installApp} onSignOut={signOut} onRequireLogin={requireLogin} onChangePassword={openPasswordChange} />}
       </main>
       {activeTab === 'home' && !filtersOpen && !feed.showingSaved && !sharedArticle && <form className={`research-search home-news-search${newsSearchOpen ? ' is-open' : ''}`} role="search" onSubmit={event => {
         event.preventDefault();
