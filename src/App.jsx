@@ -335,6 +335,7 @@ export default function App() {
         onThemeChange={changeTheme}
         showFilter={activeTab === 'home' && !feed.showingSaved && !sharedArticle}
         filtersOpen={filtersOpen}
+        autoHide={activeTab === 'home' && !filtersOpen}
         onFilterToggle={() => filtersOpen ? cancelFilters() : openFilters()}
       />
       <FilterPanel

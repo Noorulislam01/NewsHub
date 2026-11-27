@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import ArticleSummary from './ArticleSummary.jsx';
 import { articleKey } from '../../../shared/storage.js';
 import { createSharedArticleUrl } from '../../../shared/sharedArticle.js';
@@ -108,6 +109,7 @@ export default function NewsCard({ article, otherCoverage, saved, read, showingS
   const [imageFailed, setImageFailed] = useState(false);
   const [cardNotice, setCardNotice] = useState('');
   const [noticePosition, setNoticePosition] = useState('top');
+  const [confirmUnsave, setConfirmUnsave] = useState(false);
   const cardNoticeTimer = useRef(null);
 
   useEffect(() => () => window.clearTimeout(cardNoticeTimer.current), []);
@@ -138,6 +140,14 @@ export default function NewsCard({ article, otherCoverage, saved, read, showingS
       onRequireLogin?.('Sign in to save this article.');
       return;
     }
+    if (showingSaved && saved) {
+      setConfirmUnsave(true);
+      return;
+    }
+    saveArticle();
+  }
+
+  function saveArticle() {
     onSave?.(article);
     showCardNotice(saved ? 'Removed from your library' : 'Saved to your library', 'bottom');
   }
@@ -215,6 +225,25 @@ export default function NewsCard({ article, otherCoverage, saved, read, showingS
         </div>
       </div>
       {cardNotice && <div className={`card-feedback${noticePosition === 'bottom' ? ' card-feedback-bottom' : ''}`} role="status" aria-live="polite">{cardNotice}</div>}
+      {confirmUnsave && createPortal(
+        <div className="auth-overlay account-confirm-overlay" onMouseDown={event => { if (event.target === event.currentTarget) setConfirmUnsave(false); }}>
+          <section className="auth-dialog account-confirm-dialog library-unsave-confirm" role="alertdialog" aria-modal="true" aria-labelledby="unsaveTitle" aria-describedby="unsaveDescription">
+            <button className="auth-close" type="button" aria-label="Cancel unsaving article" onClick={() => setConfirmUnsave(false)}>×</button>
+            <div className="account-confirm-heading">
+              <div className="account-confirm-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.75L6 21V4.75Z" /></svg>
+              </div>
+              <h2 id="unsaveTitle">Remove from Library?</h2>
+            </div>
+            <p className="auth-intro" id="unsaveDescription">Are you sure you want to remove this article from your Library?</p>
+            <div className="account-confirm-actions">
+              <button className="btn" type="button" onClick={() => setConfirmUnsave(false)}>Cancel</button>
+              <button className="btn primary" type="button" onClick={() => { setConfirmUnsave(false); saveArticle(); }}>Remove</button>
+            </div>
+          </section>
+        </div>,
+        document.body
+      )}
     </article>
   );
 }
