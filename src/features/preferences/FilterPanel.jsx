@@ -85,7 +85,6 @@ export default function FilterPanel({ open, preferences, newspapers, categories,
             <option value="48">Last 48 Hours</option>
             <option value="168">Last 7 Days</option>
           </select>
-          <button className="btn filter-select-all" type="button" onClick={() => onChange({ ...preferences, papers: newspapers.map(source => source.id) })}>Select All Newspapers</button>
         </div>
         <div className="filter-dialog-actions">
           <button className="btn filter-clear" type="button" onClick={onClear}>Clear filters</button>
