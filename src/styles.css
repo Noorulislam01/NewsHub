@@ -36,7 +36,7 @@ main{width:100%;max-width:1200px;flex:1 0 auto;display:flex;flex-direction:colum
 .stats{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:.9rem;margin-bottom:12px}
 .stats b{color:var(--ink)}
 .category-bar{position:sticky;top:64px;z-index:10;display:flex;align-items:center;gap:8px;margin:0 -16px 12px;padding:8px 0;background:var(--bg);border-bottom:1px solid var(--line);transition:top .38s cubic-bezier(.22,.61,.36,1)}
-body.home-header-hidden .category-bar{top:12px}
+body.home-header-hidden .category-bar{top:0}
 .category-bar[hidden]{display:none}
 .category-nav{min-width:0;flex:1;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 16px}
 .category-nav::-webkit-scrollbar{display:none}
