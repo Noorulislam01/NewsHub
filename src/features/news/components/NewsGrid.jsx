@@ -100,7 +100,7 @@ export default function NewsGrid({ groups, showingSaved, resetKey, totalArticles
       />
     ))}
     {pageCount > 1 && (
-      <nav className="pagination" aria-label="News article pages">
+      <nav className={`pagination${showingSaved ? ' library-pagination' : ''}`} aria-label="News article pages">
         <label className="pagination-size">
           <span>Articles per page</span>
           <span className="pagination-select-wrap">
